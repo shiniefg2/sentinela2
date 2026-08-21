@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Sistema Hospitalar - Login</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+
+    body {
+      background-color: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+
+    .container {
+      background-color: #ffffff;
+      padding: 40px 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+
+
+    .container h2 {
+      color: #0284c7;
+      margin-bottom: 24px;
+      font-size: 24px;
+    }
+
+
+    .container input {
+      width: 100%;
+      padding: 12px 15px;
+      margin-bottom: 16px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .container input:focus {
+      border-color: #0284c7;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+
+
+    .container input.error {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    }
+
+
+    #msg-erro {
+      color: #ef4444;
+      font-size: 13px;
+      margin-bottom: 12px;
+      display: none;
+    }
+
+
+    .container button {
+      width: 100%;
+      padding: 12px;
+      background-color: #0284c7;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .container button:hover {
+      background-color: #0369a1;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <img src="css/Captura de tela 2026-08-06 114854.png" width="54px" height="54px">
+    <h2>Baymax</h2>
+
+    <div id="msg-erro"></div>
+
+    <input id="usuario" placeholder="Usuário" oninput="removerErro(this)">
+    <input id="senha" type="password" placeholder="Senha" oninput="removerErro(this)">
+    <button onclick="login()">Entrar</button>
+  </div>
+
+  <script>
+    function removerErro(input) {
+      input.classList.remove("error");
+      document.getElementById("msg-erro").style.display = "none";
+    }
+
+    function login() {
+      const inputUsuario = document.getElementById("usuario");
+      const inputSenha = document.getElementById("senha");
+      const msgErro = document.getElementById("msg-erro");
+
+      let valido = true;
+
+
+      if (!inputUsuario.value.trim()) {
+        inputUsuario.classList.add("error");
+        valido = false;
+      }
+
+      if (!inputSenha.value.trim()) {
+        inputSenha.classList.add("error");
+        valido = false;
+      }
+
+      if (!valido) {
+        msgErro.innerText = "Por favor, preencha todos os campos.";
+        msgErro.style.display = "block";
+        return;
+      }
+
+      fetch("http://localhost:3000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          usuario: usuario.value,
+          senha: senha.value
+        })
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.tipo === "triagem") location.href = "triagem.html";
+          if (data.tipo === "medico") location.href = "medico.html";
+          if (data.tipo === "atendimento") location.href = "atendimento.html";
+
+
+          if (!data.tipo) {
+            msgErro.innerText = "Usuário ou senha incorretos.";
+            msgErro.style.display = "block";
+          }
+        })
+        .catch(() => {
+          msgErro.innerText = "Erro ao conectar com o servidor. Por favor confira os dados solicitados.";
+          msgErro.style.display = "block";
+        });
+    }
+  </script>
+
+</body>
+
+</html>

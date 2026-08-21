@@ -1,0 +1,171 @@
+
+:root {
+  --primary-color: #0f172a;
+  --accent-color: #15a1fe;
+  --accent-hover: #0369a1;
+  --surface-color: #ffffff;
+  --background-color: #ffffff;
+  --border-color: #cbd5e1;
+  --text-main: #334155;
+  --text-muted: #64748b;
+  --radius-standard: 6px;
+  --shadow-subtle: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--background-color);
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text-main);
+  /* Detalhe técnico interno: simula textura sutil de fundo corporativo */
+  background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Container Estilizado como Estação de Trabalho / Prontuário */
+.container {
+  background-color: var(--surface-color);
+  width: 100%;
+  max-width: 480px;
+  padding: 36px 40px;
+  border-radius: var(--radius-standard);
+  box-shadow: var(--shadow-card);
+  border-top: 4px solid var(--accent-color);
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  position: relative;
+}
+
+/* Identificação Visual de Sistema Interno no Topo */
+.container::before {
+  content: "TERMINAL DE REGISTRO - RECURSO INTERNO";
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent-color);
+  margin-bottom: 8px;
+}
+
+/* Cabeçalho do Módulo */
+.container h2 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Ícone de status de conexão interna simulado via CSS */
+.container h2::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+/* Campos de Entrada (Inputs e Selects com padrão corporativo rigoroso) */
+.container input:not([type="file"]), 
+.container select {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  margin-bottom: 16px;
+  background-color: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-standard);
+  color: var(--text-main);
+  font-size: 0.9rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.container input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+/* Estados de Foco com foco em acessibilidade e precisão */
+.container input:not([type="file"]):focus, 
+.container select:focus {
+  outline: none;
+  background-color: #ffffff;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+/* Tratamento Técnico Avançado para o Input de Arquivos (Laudo/Documento) */
+.container input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 24px;
+  background-color: #f8fafc;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-standard);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.container input[type="file"]:hover {
+  border-color: var(--accent-color);
+}
+
+.container input[type="file"]::file-selector-button {
+  background-color: #e0f2fe;
+  color: var(--accent-color);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  margin-right: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.container input[type="file"]::file-selector-button:hover {
+  background-color: #bae6fd;
+}
+
+/* Botão de Ação Principal (Execução de Cadastro/Encaminhamento) */
+.container button {
+  width: 100%;
+  height: 46px;
+  background-color: var(--accent-color);
+  border: none;
+  border-radius: var(--radius-standard);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  cursor: pointer;
+  box-shadow: var(--shadow-subtle);
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.container button:hover {
+  background-color: var(--accent-hover);
+}
+
+.container button:active {
+  transform: translateY(1px);
+}

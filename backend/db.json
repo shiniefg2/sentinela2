@@ -1,0 +1,31 @@
+{
+  "usuarios": [
+    {
+      "usuario": "tri",
+      "senha": "123",
+      "tipo": "triagem"
+    },
+    {
+      "usuario": "med",
+      "senha": "123",
+      "tipo": "medico"
+    },
+    {
+      "usuario": "ate",
+      "senha": "123",
+      "tipo": "atendimento"
+    }
+  ],
+  "pacientes": [
+    {
+      "id": 1786624322640,
+      "nome": "123",
+      "cpf": "111.111.111-11",
+      "tipo": "Convenio",
+      "status": "triagem",
+      "createdAt": "2026-08-13T12:32:02.640Z"
+    }
+  ],
+  "triagens": [],
+  "consultas": []
+}

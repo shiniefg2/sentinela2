@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Triagem</title>
+<link rel="stylesheet" href="css/style.css">
+
+<style>
+.btn-tv {
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.btn-tv:hover {
+  background-color: #1e7e342f;}
+
+  .pacientes-fila{
+    margin-bottom: 30px;
+    background-color: #ffff;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #fff;
+  }
+
+  .pacientes-fila h3 {
+    margin-top: 0;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .pacientes-fila h3 span{
+    font-size: 13px;
+    font-weight: normal;
+    color: #666;
+  }
+
+  .fila-item{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #fff;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    border: 1px solid #fff;
+  }
+.fila-item strong { font-size: 15px;}
+.fila-item small  { color: #666;
+ font-size: 12px;
+}
+
+.btn-abrir-tv{
+  display: inline-block;
+  background-color: aquamarine;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 5px;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+}
+.btn-abrir-tv-houver{
+  background: #117a0b;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    :root {
+      --primary-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --input-bg: #f8fafc;
+      --border-color: #cbd5e1;
+      --primary-color: #0284c7;
+      --primary-hover: #0369a1;
+      --text-main: #334155;
+      --text-heading: #0f172a;
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+      --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+      --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--primary-gradient);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--text-main);
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(2, 132, 199, 0.15) 0%, transparent 70%);
+      top: -100px;
+      left: -100px;
+      z-index: 0;
+      animation: floatBlob 10s infinite alternate ease-in-out;
+    }
+
+    body::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+      bottom: -100px;
+      right: -100px;
+      z-index: 0;
+      animation: floatBlob 12s infinite alternate-reverse ease-in-out;
+    }
+
+    @keyframes floatBlob {
+      0% {
+        transform: translate(0, 0) scale(1);
+      }
+
+      100% {
+        transform: translate(50px, 50px) scale(1.1);
+      }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 2.5rem;
+      border-radius: 24px;
+      box-shadow: var(--shadow-xl);
+      width: 100%;
+      max-width: 480px;
+      margin: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      animation: containerEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes containerEntrance {
+      0% {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .container h2 {
+      color: var(--text-heading);
+      font-size: 1.75rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.025em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      font-family: inherit;
+      font-size: 0.95rem;
+      padding: 0.875rem 1rem;
+      background-color: var(--input-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      color: var(--text-main);
+      box-shadow: var(--shadow-inner);
+      transition: var(--transition-smooth);
+      outline: none;
+    }
+
+    input:hover,
+    select:hover,
+    textarea:hover {
+      border-color: #94a3b8;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--primary-color);
+      background-color: #ffffff;
+      box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.15), var(--shadow-inner);
+      transform: translateY(-1px);
+    }
+
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      background-size: 1.25rem;
+      padding-right: 2.5rem;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+      max-height: 200px;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #94a3b8;
+      font-weight: 400;
+    }
+
+    button {
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+      border: none;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-top: 0.5rem;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+      transition: var(--transition-smooth);
+      position: relative;
+      overflow: hidden;
+    }
+
+    button::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: 0.5s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4);
+    }
+
+    button:hover::after {
+      left: 100%;
+    }
+
+    button:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+    }
+
+    #resultado {
+      margin-top: 0.25rem;
+      padding: 0;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-align: center;
+      transition: var(--transition-smooth);
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
+    #resultado:not(:empty) {
+      padding: 1rem;
+      opacity: 1;
+      transform: scale(1);
+      animation: resultPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes resultPop {
+      0% {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    #resultado.vermelho {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      color: #991b1b;
+      border: 2px solid #f87171;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    }
+
+    #resultado.amarelo {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #92400e;
+      border: 2px solid #fbbf24;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+    }
+
+    #resultado.verde {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      color: #065f46;
+      border: 2px solid #34d399;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <img src="css/Captura de tela 2026-08-06 114854.png" width="54px" height="54px">
+    <h2> Triagem Baymax</h2>
+    <input id="nome" placeholder="Nome">
+
+    <select id="sintoma">
+
+      <option value="">Selecione</option>
+
+      <option value="arritmia">Arritmia</option>
+      <option value="asma">Crise de asma</option>
+      <option value="avc">Suspeita de AVC</option>
+      <option value="bronquite">Bronquite</option>
+      <option value="calafrios">Calafrios</option>
+      <option value="cansaco">Cansaço excessivo</option>
+      <option value="cefaleia">Cefaleia (dor de cabeça)</option>
+      <option value="colica_renal">Cólica renal</option>
+      <option value="conjuntivite">Conjuntivite</option>
+      <option value="constipacao">Constipação (prisão de ventre)</option>
+      <option value="contusao">Contusão</option>
+      <option value="convulsao">Convulsão</option>
+      <option value="coriza">Coriza</option>
+      <option value="crise_hipertensiva">Crise hipertensiva</option>
+      <option value="desconforto_respiratorio">Desconforto respiratório</option>
+      <option value="desidratacao">Desidratação</option>
+      <option value="desmaio">Desmaio</option>
+      <option value="diarreia">Diarreia</option>
+      <option value="dor_abdominal">Dor abdominal</option>
+      <option value="dor_articular">Dor articular</option>
+      <option value="dor_de_garganta">Dor de garganta</option>
+      <option value="dor_leve">Dor leve</option>
+      <option value="dor_lombar">Dor lombar</option>
+      <option value="dor_muscular">Dor muscular</option>
+      <option value="dor_no_peito">Dor no peito</option>
+      <option value="dor_ocular">Dor ocular</option>
+      <option value="dor_ouvido">Dor de ouvido</option>
+      <option value="edema">Edema (inchaço)</option>
+      <option value="erupcao_cutanea">Erupção cutânea</option>
+      <option value="espasmo_muscular">Espasmo muscular</option>
+      <option value="fadiga">Fadiga</option>
+      <option value="falta_ar_grave">Falta de ar grave</option>
+      <option value="falta_ar_moderada">Falta de ar moderada</option>
+      <option value="febre">Febre</option>
+      <option value="fratura">Fratura</option>
+      <option value="gastrite">Gastrite</option>
+      <option value="hemorragia">Hemorragia</option>
+      <option value="herpes">Herpes</option>
+      <option value="hiperglicemia">Hiperglicemia</option>
+      <option value="hipoglicemia">Hipoglicemia</option>
+      <option value="infarto">Suspeita de infarto</option>
+      <option value="infeccao_urinaria">Infecção urinária</option>
+      <option value="insolacao">Insolação</option>
+      <option value="intoxicacao">Intoxicação</option>
+      <option value="nausea">Náusea</option>
+      <option value="palpitacoes">Palpitações</option>
+      <option value="picada_animal">Picada de animal ou inseto</option>
+      <option value="pressao_alta">Pressão alta</option>
+      <option value="pressao_baixa">Pressão baixa</option>
+      <option value="queimadura">Queimadura</option>
+      <option value="reacao_alergica">Reação alérgica</option>
+      <option value="resfriado">Resfriado</option>
+      <option value="sangramento_nasal">Sangramento nasal</option>
+      <option value="sutura">Ferimento com necessidade de sutura</option>
+      <option value="tontura">Tontura</option>
+      <option value="tosse">Tosse</option>
+      <option value="traumatismo">Traumatismo</option>
+      <option value="vertigem">Vertigem</option>
+      <option value="visao_turva">Visão turva</option>
+      <option value="vomito">Vômito</option>
+    </select>
+
+    <input id="temp" type="number" placeholder="Temperatura" />
+
+    <input id="alergia" placeholder="Alergias" />
+
+    <textarea id="observacao" placeholder="Observações"></textarea>
+
+    <div id="resultado"></div>
+
+    <button onclick="salvar()">
+      Salvar Triagem
+    </button>
+
+  </div>
+
+  <script>
+
+    function classificarRisco(sintoma, temperatura) {
+
+      const vermelhos = [
+        "infarto",
+        "avc",
+        "convulsao",
+        "hemorragia",
+        "falta_ar_grave"
+      ];
+
+      const amarelos = [
+        "febre",
+        "vomito",
+        "diarreia",
+        "falta_ar_moderada"
+      ];
+
+      if (temperatura >= 39) {
+        return "vermelho";
+      }
+
+      if (vermelhos.includes(sintoma)) {
+        return "vermelho";
+      }
+
+      if (amarelos.includes(sintoma)) {
+        return "amarelo";
+      }
+
+      return "verde";
+    }
+
+    function salvar() {
+
+      const nome =
+        document.getElementById("nome").value;
+
+      const sintoma =
+        document.getElementById("sintoma").value;
+
+      const temperatura =
+        Number(document.getElementById("temp").value);
+
+      const alergia =
+        document.getElementById("alergia").value;
+
+      const observacao =
+        document.getElementById("observacao").value;
+
+      const risco =
+        classificarRisco(sintoma, temperatura);
+
+      fetch("http://localhost:3000/triagem", {
+
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+
+          nome,
+          sintoma,
+          temperatura,
+          alergia,
+          observacao,
+          risco
+
+        })
+
+      })
+
+        .then(r => r.json())
+
+        .then(data => {
+
+          const resultado =
+            document.getElementById("resultado");
+
+          resultado.className = risco;
+
+          resultado.innerHTML =
+            "Classificação: " +
+            risco.toUpperCase();
+
+          alert("Triagem salva");
+
+        });
+
+    }
+
+  </script>
+
+</body>
+
+</html>

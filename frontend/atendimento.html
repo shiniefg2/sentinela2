@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/style2.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Atendimento Baymax</h2>
+
+        <input id="nome" placeholder="Nome">
+
+        <input id="cpf" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)">
+
+        <select id="tipo">
+            <option>Convenio</option>
+            <option>Particular</option>
+        </select>
+
+        <input type="file" id="foto">
+
+        <button onclick="cadastrar()">Cadastrar</button>
+    </div>
+
+    <script>
+        function mascaraCPF(campo) {
+            let valor = campo.value.replace(/\D/g, "");
+
+            if (valor.length > 11) {
+                valor = valor.substring(0, 11);
+            }
+
+            valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
+            valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
+            valor = valor.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+
+            campo.value = valor;
+        }
+
+        function cadastrar() {
+
+            const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+
+            if (nome.value.trim() === "") {
+                alert("Digite o nome.");
+                return;
+            }
+
+            if (!cpfRegex.test(cpf.value)) {
+                alert("Digite o CPF no formato 000.000.000-00");
+                return;
+            }
+
+            fetch("http://localhost:3000/atendimento", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    nome: nome.value,
+                    cpf: cpf.value,
+                    tipo: tipo.value
+                })
+            });
+
+            alert("Paciente enviado para triagem");
+        }
+    </script>
+
+</body>
+
+</html>
