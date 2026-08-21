@@ -138,8 +138,8 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          usuario: usuario.value,
-          senha: senha.value
+          usuario: inputUsuario.value,
+          senha: inputSenha.value
         })
       })
         .then(r => r.json())
