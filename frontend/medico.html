@@ -1,146 +1,619 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 
 <head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+  <title>Painel Médico Baymax</title>
+
   <link rel="stylesheet" href="css/style.css">
+
 </head>
+
 
 <body>
 
   <div class="container">
-    <img src="css/Captura de tela 2026-08-06 114854.png" width="54px" height="54px">
+
+    <img
+      src="css/Captura de tela 2026-08-06 114854.png"
+      width="54"
+      height="54"
+      alt="Baymax">
+
+
     <h2>🩺 Painel Médico Baymax</h2>
 
-    <div id="triagens"></div>
+
+    <!-- =====================================================
+         CONFIGURAÇÃO DO GUICHÊ
+    ====================================================== -->
+
+    <h3>📺 Chamada na TV</h3>
+
+
+    <select id="localTipo">
+
+      <option value="GUICHÊ">
+        GUICHÊ
+      </option>
+
+      <option value="CONSULTÓRIO">
+        CONSULTÓRIO
+      </option>
+
+      <option value="SALA">
+        SALA
+      </option>
+
+    </select>
+
+
+    <input
+      id="localNumero"
+      type="number"
+      min="1"
+      placeholder="Número do guichê">
+
 
     <hr>
 
+
+    <!-- =====================================================
+         TRIAGENS
+    ====================================================== -->
+
+    <h3>Pacientes aguardando atendimento</h3>
+
+
+    <div id="triagens"></div>
+
+
+    <hr>
+
+
+    <!-- =====================================================
+         CONSULTA
+    ====================================================== -->
+
     <h3>Consulta</h3>
 
-    <input id="paciente" placeholder="Paciente" readonly>
 
-    <input id="diagnostico" placeholder="Diagnóstico">
+    <input
+      id="paciente"
+      placeholder="Paciente"
+      readonly>
+
+
+    <input
+      id="diagnostico"
+      placeholder="Diagnóstico">
+
 
     <select id="medicacao">
-      <option value="">Selecione a medicação</option>
+
+      <option value="">
+        Selecione a medicação
+      </option>
+
     </select>
 
-    <textarea id="obs" placeholder="Observações"></textarea>
 
-    <button onclick="salvar()">Salvar</button>
+    <textarea
+      id="obs"
+      placeholder="Observações"></textarea>
+
+
+    <button
+      type="button"
+      onclick="salvar()">
+
+      Salvar
+
+    </button>
+
 
   </div>
+
 
   <script>
 
     let triagensCarregadas = [];
 
+
+    // =====================================================
+    // CARREGAR TRIAGENS
+    // =====================================================
+
     function carregar() {
+
       fetch("/triagens")
-        .then(r => r.json())
+
+        .then(r => {
+
+          if (!r.ok) {
+
+            throw new Error(
+              "Erro ao carregar triagens"
+            );
+
+          }
+
+          return r.json();
+
+        })
+
         .then(data => {
+
           triagensCarregadas = data;
 
-          const div = document.getElementById("triagens");
+
+          const div =
+            document.getElementById(
+              "triagens"
+            );
+
+
           div.innerHTML = "";
 
+
+          if (!data.length) {
+
+            div.innerHTML = `
+              <p>
+                Nenhum paciente aguardando atendimento.
+              </p>
+            `;
+
+            return;
+          }
+
+
           data.forEach((t, index) => {
+
             div.innerHTML += `
-          <div class="card">
-            <h3>${t.nome}</h3>
 
-            <p><b>Sintoma:</b> ${t.sintoma || "Não informado"}</p>
+              <div class="card">
 
-            <p><b>Temperatura:</b> ${t.temperatura || "Não informada"}°C</p>
+                <h3>
+                  ${t.nome}
+                </h3>
 
-            <p>
-              <span class="${t.risco}">
-                ${t.risco}
-              </span>
-            </p>
 
-            <p><b>Alergia:</b> ${t.alergia || "Nenhuma"}</p>
+                <p>
+                  <b>Sintoma:</b>
+                  ${t.sintoma || "Não informado"}
+                </p>
 
-            <p><b>Observação:</b> ${t.observacao || "Nenhuma"}</p>
 
-            <button onclick="selecionar(${index})">
-              Atender
-            </button>
-          </div>
-        `;
+                <p>
+                  <b>Temperatura:</b>
+                  ${t.temperatura || "Não informada"}°C
+                </p>
+
+
+                <p>
+
+                  <span class="${t.risco}">
+                    ${t.risco}
+                  </span>
+
+                </p>
+
+
+                <p>
+                  <b>Alergia:</b>
+                  ${t.alergia || "Nenhuma"}
+                </p>
+
+
+                <p>
+                  <b>Observação:</b>
+                  ${t.observacao || "Nenhuma"}
+                </p>
+
+
+                <button
+                  type="button"
+                  onclick="selecionar(${index})">
+
+                  Atender
+
+                </button>
+
+              </div>
+
+            `;
+
           });
+
+        })
+
+        .catch(err => {
+
+          console.error(
+            "Erro ao carregar triagens:",
+            err
+          );
+
         });
+
     }
+
+
+    // =====================================================
+    // SELECIONAR PACIENTE
+    // =====================================================
 
     function selecionar(index) {
-      const t = triagensCarregadas[index];
 
-      document.getElementById("paciente").value = t.nome;
-      document.getElementById("obs").value = t.observacao || "";
+      const t =
+        triagensCarregadas[index];
 
-      if (t.alergia && t.alergia !== "Nenhuma") {
-        alert("⚠️ Paciente possui alergia: " + t.alergia);
+
+      if (!t) {
+
+        alert(
+          "Paciente não encontrado."
+        );
+
+        return;
       }
+
+
+      document.getElementById(
+        "paciente"
+      ).value = t.nome;
+
+
+      document.getElementById(
+        "obs"
+      ).value =
+        t.observacao || "";
+
+
+      if (
+        t.alergia &&
+        t.alergia !== "Nenhuma"
+      ) {
+
+        alert(
+          "⚠️ Paciente possui alergia: " +
+          t.alergia
+        );
+
+      }
+
+
+      // =================================================
+      // CHAMAR PACIENTE NA TV
+      // =================================================
+
+      chamarNaTV(t);
+
     }
+
+
+    // =====================================================
+    // CHAMAR PACIENTE NA TV
+    // =====================================================
+
+    function chamarNaTV(t) {
+
+      const localTipo =
+        document.getElementById(
+          "localTipo"
+        ).value;
+
+
+      const localNumero =
+        document.getElementById(
+          "localNumero"
+        ).value;
+
+
+      if (!localNumero) {
+
+        alert(
+          "Informe o número do guichê antes de chamar o paciente."
+        );
+
+        return;
+      }
+
+
+      fetch("/tv/chamar", {
+
+        method: "POST",
+
+        headers: {
+
+          "Content-Type":
+            "application/json"
+
+        },
+
+        body: JSON.stringify({
+
+          paciente: t.nome,
+
+          localTipo:
+
+            localTipo,
+
+          localNumero:
+
+            localNumero
+
+        })
+
+      })
+
+
+        .then(r => {
+
+          if (!r.ok) {
+
+            throw new Error(
+              "Erro ao chamar paciente"
+            );
+
+          }
+
+          return r.json();
+
+        })
+
+
+        .then(data => {
+
+          if (data.sucesso) {
+
+            alert(
+              "📺 Paciente chamado na TV!"
+            );
+
+          }
+
+        })
+
+
+        .catch(err => {
+
+          console.error(
+            "Erro ao chamar na TV:",
+            err
+          );
+
+
+          alert(
+            "Não foi possível chamar o paciente na TV."
+          );
+
+        });
+
+    }
+
+
+    // =====================================================
+    // CARREGAR MEDICAÇÕES
+    // =====================================================
 
     function carregarMedicacoes() {
+
       fetch("/lista-medicacoes")
-        .then(r => r.json())
+
+        .then(r => {
+
+          if (!r.ok) {
+
+            throw new Error(
+              "Erro ao carregar medicações"
+            );
+
+          }
+
+          return r.json();
+
+        })
+
         .then(data => {
-          const select = document.getElementById("medicacao");
+
+          const select =
+            document.getElementById(
+              "medicacao"
+            );
+
 
           select.innerHTML = `
-        <option value="">Selecione a medicação</option>
-      `;
+
+            <option value="">
+              Selecione a medicação
+            </option>
+
+          `;
+
 
           data.forEach(med => {
-            const option = document.createElement("option");
+
+            const option =
+              document.createElement(
+                "option"
+              );
+
+
             option.value = med;
+
             option.textContent = med;
-            select.appendChild(option);
+
+
+            select.appendChild(
+              option
+            );
+
           });
+
+        })
+
+        .catch(err => {
+
+          console.error(
+            "Erro ao carregar medicações:",
+            err
+          );
+
         });
+
     }
+
+
+    // =====================================================
+    // SALVAR CONSULTA
+    // =====================================================
 
     function salvar() {
-      const paciente = document.getElementById("paciente").value;
-      const diagnostico = document.getElementById("diagnostico").value;
-      const medicacao = document.getElementById("medicacao").value;
-      const obs = document.getElementById("obs").value;
+
+      const paciente =
+        document.getElementById(
+          "paciente"
+        ).value;
+
+
+      const diagnostico =
+        document.getElementById(
+          "diagnostico"
+        ).value;
+
+
+      const medicacao =
+        document.getElementById(
+          "medicacao"
+        ).value;
+
+
+      const obs =
+        document.getElementById(
+          "obs"
+        ).value;
+
 
       if (!paciente) {
-        alert("Selecione um paciente clicando em Atender.");
+
+        alert(
+          "Selecione um paciente clicando em Atender."
+        );
+
         return;
       }
+
 
       if (!medicacao) {
-        alert("Selecione uma medicação.");
+
+        alert(
+          "Selecione uma medicação."
+        );
+
         return;
       }
 
-      fetch("/consulta", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          paciente,
-          diagnostico,
-          medicacao,
-          obs
-        })
-      })
-        .then(r => r.json())
-        .then(() => {
-          alert("Consulta salva");
 
-          document.getElementById("diagnostico").value = "";
-          document.getElementById("medicacao").value = "";
-          document.getElementById("obs").value = "";
+      fetch("/consulta", {
+
+        method: "POST",
+
+        headers: {
+
+          "Content-Type":
+            "application/json"
+
+        },
+
+        body: JSON.stringify({
+
+          paciente,
+
+          diagnostico,
+
+          medicacao,
+
+          obs
+
+        })
+
+      })
+
+
+        .then(r => {
+
+          if (!r.ok) {
+
+            throw new Error(
+              "Erro ao salvar consulta"
+            );
+
+          }
+
+          return r.json();
+
+        })
+
+
+        .then(() => {
+
+          alert(
+            "Consulta salva"
+          );
+
+
+          document.getElementById(
+            "diagnostico"
+          ).value = "";
+
+
+          document.getElementById(
+            "medicacao"
+          ).value = "";
+
+
+          document.getElementById(
+            "obs"
+          ).value = "";
+
+
+          // Atualiza a lista
+          carregar();
+
+        })
+
+
+        .catch(err => {
+
+          console.error(
+            "Erro ao salvar consulta:",
+            err
+          );
+
+
+          alert(
+            "Não foi possível salvar a consulta."
+          );
+
         });
+
     }
 
+
+    // =====================================================
+    // INICIALIZAÇÃO
+    // =====================================================
+
     carregar();
+
     carregarMedicacoes();
 
   </script>
