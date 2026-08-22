@@ -3,13 +3,144 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Setor de Medicação</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Setor de Medicação - Baymax</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f0f4f8;
+      color: #334155;
+    }
+
+    .topbar {
+      background-color: #0284c7;
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .topbar h1 {
+      font-size: 20px;
+    }
+
+    .topbar button {
+      background-color: #ef4444;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      width: auto;
+    }
+
+    .topbar button:hover {
+      background-color: #dc2626;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .card h2 {
+      color: #0284c7;
+      font-size: 18px;
+      margin-bottom: 16px;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 8px;
+    }
+
+    .pacientes-list {
+      list-style: none;
+    }
+
+    .paciente-item {
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .paciente-item:hover {
+      border-color: #0284c7;
+      background-color: #f0f9ff;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      background-color: #fff;
+    }
+
+    textarea[readonly], input[readonly] {
+      background-color: #f8fafc;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #0284c7;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+
+    button[type="submit"] {
+      background-color: #0284c7;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #0369a1;
+    }
+  </style>
 </head>
 <body>
 
   <header class="topbar">
-    <h1>Setor de Medicação</h1>
+    <h1>Setor de Medicação - Baymax</h1>
     <button onclick="logout()">Sair</button>
   </header>
 
@@ -41,31 +172,26 @@
   </main>
 
   <script>
-    const API_URL = "http://localhost:3000";
-
-    // 1. Verificar Autenticação
     const usuarioLogado = JSON.parse(sessionStorage.getItem("usuario"));
-    if (!usuarioLogado || usuarioLogado.tipo !== "medicacao") {
-      window.location.href = "login.html";
+    if (!usuarioLogado) {
+      window.location.href = "/";
     }
 
     function logout() {
       sessionStorage.removeItem("usuario");
-      window.location.href = "login.html";
+      window.location.href = "/";
     }
 
-    // 2. Buscar Pacientes com status 'aguardando_medicacao'
     async function carregarFila() {
       const listaFila = document.getElementById("listaFila");
-      listaFila.innerHTML = "<li>Carregando fila...</li>";
 
       try {
-        const res = await fetch(`${API_URL}/pacientes/medicacao`);
+        const res = await fetch("/pacientes/medicacao");
         const pacientes = await res.json();
 
         listaFila.innerHTML = "";
 
-        if (pacientes.length === 0) {
+        if (!pacientes || pacientes.length === 0) {
           listaFila.innerHTML = "<li>Nenhum paciente aguardando medicação.</li>";
           return;
         }
@@ -83,14 +209,12 @@
       }
     }
 
-    // 3. Selecionar Paciente
     function selecionarPaciente(paciente) {
       document.getElementById("pacienteId").value = paciente.id;
       document.getElementById("paciente").value = paciente.nome;
       document.getElementById("prescricao").value = paciente.prescricao || "Sem prescrição detalhada.";
     }
 
-    // 4. Concluir Medicação
     document.getElementById("form-medicacao").addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -101,7 +225,7 @@
       }
 
       try {
-        const res = await fetch(`${API_URL}/medicacao/aplicar`, {
+        const res = await fetch("/medicacao/aplicar", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
