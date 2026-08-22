@@ -16,9 +16,9 @@
       "tipo": "medico"
     },
     {
-     "usuario": "medicacao",
-  "senha": "123",
-  "tipo": "medicacao"
+      "usuario": "medicacao",
+      "senha": "123",
+      "tipo": "medicacao"
     },
     {
       "usuario": "alta",
@@ -26,9 +26,60 @@
       "tipo": "alta"
     }
   ],
-  "pacientes": [],
-  "triagens": [],
-  "consultas": [],
-  "chamadas": [],
-  "altas": []
+  "pacientes": [
+    {
+      "id": 1787416269386,
+      "nome": "vanessa",
+      "cpf": "222.222.222-22",
+      "tipo": "Convenio",
+      "status": "alta",
+      "createdAt": "2026-08-22T16:31:09.386Z",
+      "risco": "vermelho",
+      "dataAlta": "2026-08-22T17:01:00.953Z"
+    }
+  ],
+  "triagens": [
+    {
+      "id": 1787416320304,
+      "pacienteId": 1787416269386,
+      "nome": "vanessa",
+      "sintoma": "todos",
+      "temperatura": 67,
+      "alergia": "homen",
+      "observacao": "",
+      "risco": "vermelho",
+      "createdAt": "2026-08-22T16:32:00.304Z"
+    }
+  ],
+  "consultas": [
+    {
+      "id": 1787417285938,
+      "pacienteId": 1787416269386,
+      "paciente": "vanessa",
+      "diagnostico": "2",
+      "medicacao": "222",
+      "obs": "",
+      "createdAt": "2026-08-22T16:48:05.938Z"
+    }
+  ],
+  "medicacoes": [],
+  "chamadas": [
+    {
+      "id": 1787416298366,
+      "paciente": "vanessa",
+      "localTipo": "TRIAGEM",
+      "localNumero": "01",
+      "createdAt": "2026-08-22T16:31:38.366Z"
+    }
+  ],
+  "altas": [
+    {
+      "id": 1787418060953,
+      "pacienteId": 1787416269386,
+      "paciente": "vanessa",
+      "tipoAlta": "Alta Curado",
+      "orientacoes": "",
+      "createdAt": "2026-08-22T17:01:00.953Z"
+    }
+  ]
 }
