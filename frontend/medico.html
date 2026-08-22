@@ -1,196 +1,161 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atendimento Médico - Baymax</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-        body { background-color: #f4f6f9; padding: 20px; }
-        .container { display: flex; gap: 20px; max-width: 1200px; margin: 0 auto; }
-        .panel { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .list-panel { flex: 1; }
-        .form-panel { flex: 1.5; }
-        h2 { margin-bottom: 15px; color: #333; }
-        ul { list-style: none; }
-        li { padding: 12px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
-        
-        /* Badges de Risco */
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #fff; text-transform: uppercase; }
-        .bg-verde { background-color: #2ecc71; }
-        .bg-amarelo { background-color: #f1c40f; color: #333; }
-        .bg-vermelho { background-color: #e74c3c; }
-
-        button { cursor: pointer; padding: 8px 12px; border: none; border-radius: 4px; font-weight: bold; }
-        .btn-call { background-color: #f39c12; color: #fff; margin-right: 5px; }
-        .btn-select { background-color: #3498db; color: #fff; }
-        .btn-submit { background-color: #2ecc71; color: #fff; width: 100%; padding: 12px; font-size: 16px; margin-top: 15px; }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atendimento Médico</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="container">
-    <!-- FILA DE ESPERA MÉRICA -->
-    <div class="panel list-panel">
-        <h2>Aguardando Atendimento</h2>
-        <ul id="lista-pacientes">
-            <li>Carregando...</li>
-        </ul>
+  <header class="topbar">
+    <h1>Atendimento Médico</h1>
+    <button onclick="logout()">Sair</button>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <h2>Aguardando Atendimento Médico</h2>
+      <ul id="listaFila" class="pacientes-list">
+        <li>Carregando fila...</li>
+      </ul>
     </div>
 
-    <!-- FORMULÁRIO DE CONSULTA -->
-    <div class="panel form-panel">
-        <h2>Consultório Médico</h2>
-        <form id="form-consulta">
-            <input type="hidden" id="pacienteId">
-            
-            <div class="form-group">
-                <label>Paciente:</label>
-                <input type="text" id="paciente" readonly placeholder="Selecione um paciente na fila">
-            </div>
+    <div class="card">
+      <h2>Consulta Médica</h2>
+      <form id="form-consulta">
+        <input type="hidden" id="pacienteId">
 
-            <div class="form-group">
-                <label>Diagnóstico:</label>
-                <textarea id="diagnostico" rows="3" required></textarea>
-            </div>
+        <label for="paciente">Nome do Paciente:</label>
+        <input type="text" id="paciente" placeholder="Selecione na lista ao lado" readonly required>
 
-            <div class="form-group">
-                <label>Medicação Prescrita:</label>
-                <select id="medicacao">
-                    <option value="">Carregando medicações...</option>
-                </select>
-            </div>
+        <label for="diagnostico">Diagnóstico / Anamnese:</label>
+        <textarea id="diagnostico" placeholder="Descreva os sintomas e o diagnóstico..." rows="3" required></textarea>
 
-            <div class="form-group">
-                <label>Observações / Recomendações:</label>
-                <textarea id="obs" rows="2"></textarea>
-            </div>
+        <label for="medicacao">Prescrição de Medicamentos (Enfermagem):</label>
+        <textarea id="medicacao" placeholder="Caso precise de medicação na unidade, descreva aqui. Se não precisar, deixe em branco." rows="3"></textarea>
 
-            <button type="submit" class="btn-submit">Finalizar Consulta</button>
-        </form>
+        <label for="obs">Observações / Orientações:</label>
+        <input type="text" id="obs" placeholder="Ex: Repouso, beber bastante água...">
+
+        <button type="submit">Finalizar Consulta</button>
+      </form>
     </div>
-</div>
+  </main>
 
-<script>
+  <script>
     const API_URL = "http://localhost:3000";
 
-    // CARREGAR PACIENTES DA FILA DO MÉDICO
+    // 1. Verificar Autenticação
+    const usuarioLogado = JSON.parse(sessionStorage.getItem("usuario"));
+    if (!usuarioLogado || usuarioLogado.tipo !== "medico") {
+      window.location.href = "login.html";
+    }
+
+    function logout() {
+      sessionStorage.removeItem("usuario");
+      window.location.href = "login.html";
+    }
+
+    // 2. Carregar Fila de Espera (Apenas status 'aguardando_medico')
     async function carregarFila() {
-        try {
-            const res = await fetch(`${API_URL}/pacientes/medico`);
-            const pacientes = await res.json();
+      const listaFila = document.getElementById("listaFila");
+      listaFila.innerHTML = "<li>Carregando fila...</li>";
 
-            const lista = document.getElementById("lista-pacientes");
-            lista.innerHTML = "";
+      try {
+        const res = await fetch(`${API_URL}/pacientes?status=aguardando_medico`);
+        const pacientes = await res.json();
 
-            if (pacientes.length === 0) {
-                lista.innerHTML = "<li>Nenhum paciente aguardando médico.</li>";
-                return;
-            }
+        listaFila.innerHTML = "";
 
-            pacientes.forEach(p => {
-                const li = document.createElement("li");
-                const corRisco = p.risco || "verde";
-
-                li.innerHTML = `
-                    <div>
-                        <strong>${p.nome}</strong><br>
-                        <span class="badge bg-${corRisco}">${corRisco}</span>
-                    </div>
-                    <div>
-                        <button class="btn-call" onclick="chamarTV('${p.nome}')">Chamar TV</button>
-                        <button class="btn-select" onclick="selecionarPaciente(${p.id}, '${p.nome}')">Atender</button>
-                    </div>
-                `;
-                lista.appendChild(li);
-            });
-        } catch (error) {
-            console.error("Erro ao carregar fila do médico:", error);
+        if (pacientes.length === 0) {
+          listaFila.innerHTML = "<li>Nenhum paciente aguardando no momento.</li>";
+          return;
         }
-    }
 
-    // CARREGAR LISTA DE MEDICAÇÕES PADRÃO
-    async function carregarMedicacoes() {
-        try {
-            const res = await fetch(`${API_URL}/lista-medicacoes`);
-            const medicacoes = await res.json();
-            const select = document.getElementById("medicacao");
-
-            select.innerHTML = '<option value="">Selecione uma medicação</option>';
-            medicacoes.forEach(med => {
-                const option = document.createElement("option");
-                option.value = med;
-                option.textContent = med;
-                select.appendChild(option);
-            });
-        } catch (error) {
-            console.error("Erro ao carregar medicações:", error);
-        }
-    }
-
-    // CHAMAR PACIENTE NA TV PARA O CONSULTÓRIO
-    async function chamarTV(nome) {
-        await fetch(`${API_URL}/tv/chamar`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                paciente: nome,
-                localTipo: "CONSULTÓRIO",
-                localNumero: "01"
-            })
+        pacientes.forEach(p => {
+          const li = document.createElement("li");
+          li.classList.add("paciente-item");
+          li.innerHTML = `
+            <strong>${p.nome}</strong> - Idade: ${p.idade || 'N/I'} <br>
+            <small>Prioridade: ${p.prioridade || 'Normal'}</small>
+          `;
+          li.onclick = () => selecionarPaciente(p);
+          listaFila.appendChild(li);
         });
-        alert(`Paciente ${nome} chamado no Consultório 01!`);
+      } catch (error) {
+        console.error("Erro ao buscar fila do médico:", error);
+        listaFila.innerHTML = "<li>Erro ao carregar pacientes.</li>";
+      }
     }
 
-    // SELECIONAR PACIENTE PARA A CONSULTA
-    function selecionarPaciente(id, nome) {
-        document.getElementById("pacienteId").value = id;
-        document.getElementById("paciente").value = nome;
+    // 3. Preencher Formulário com o Paciente Selecionado
+    function selecionarPaciente(paciente) {
+      document.getElementById("pacienteId").value = paciente.id;
+      document.getElementById("paciente").value = paciente.nome;
+      document.getElementById("diagnostico").focus();
     }
 
-    // SALVAR CONSULTA
+    // 4. Salvar Consulta Médica e Encaminhar
     document.getElementById("form-consulta").addEventListener("submit", async (e) => {
-        e.preventDefault();
+      e.preventDefault();
 
-        const pacienteId = document.getElementById("pacienteId").value;
-        if (!pacienteId) {
-            alert("Selecione um paciente na lista primeiro!");
-            return;
+      const pacienteId = document.getElementById("pacienteId").value;
+      if (!pacienteId) {
+        alert("Selecione um paciente na lista primeiro!");
+        return;
+      }
+
+      const medicacaoTexto = document.getElementById("medicacao").value.trim();
+      
+      // Define o próximo status: se houver medicação vai pra enfermagem, senão vai direto pra alta
+      const proximoStatus = medicacaoTexto ? "aguardando_medicacao" : "aguardando_alta";
+
+      const dadosConsulta = {
+        pacienteId: Number(pacienteId),
+        paciente: document.getElementById("paciente").value,
+        diagnostico: document.getElementById("diagnostico").value,
+        medicacao: medicacaoTexto,
+        obs: document.getElementById("obs").value,
+        dataHora: new Date().toISOString()
+      };
+
+      try {
+        // Salva o registro da consulta
+        const resConsulta = await fetch(`${API_URL}/consultas`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(dadosConsulta)
+        });
+
+        // Atualiza o status do paciente
+        const resStatus = await fetch(`${API_URL}/pacientes/${pacienteId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: proximoStatus })
+        });
+
+        if (resConsulta.ok && resStatus.ok) {
+          if (medicacaoTexto) {
+            alert("Consulta finalizada! Paciente encaminhado para a ENFERMAGEM/MEDICAÇÃO.");
+          } else {
+            alert("Consulta finalizada! Paciente encaminhado direto para a ALTA.");
+          }
+          
+          document.getElementById("form-consulta").reset();
+          document.getElementById("pacienteId").value = "";
+          carregarFila();
+        } else {
+          alert("Erro ao salvar consulta. Tente novamente.");
         }
-
-        const dados = {
-            pacienteId: Number(pacienteId),
-            paciente: document.getElementById("paciente").value,
-            diagnostico: document.getElementById("diagnostico").value,
-            medicacao: document.getElementById("medicacao").value,
-            obs: document.getElementById("obs").value
-        };
-
-        try {
-            const res = await fetch(`${API_URL}/consulta`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(dados)
-            });
-
-            if (res.ok) {
-                alert("Consulta finalizada com sucesso!");
-                document.getElementById("form-consulta").reset();
-                carregarFila();
-            }
-        } catch (error) {
-            console.error("Erro ao salvar consulta:", error);
-        }
+      } catch (error) {
+        console.error("Erro ao salvar consulta:", error);
+        alert("Erro de conexão com o servidor.");
+      }
     });
 
-    // Inicialização
+    // Inicia a fila ao carregar a página
     carregarFila();
-    carregarMedicacoes();
-    setInterval(carregarFila, 5000);
-</script>
-
+  </script>
 </body>
 </html>
