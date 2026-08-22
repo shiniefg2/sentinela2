@@ -19,13 +19,15 @@
   "pacientes": [
     {
       "id": 1786624322640,
-      "nome": "123",
+      "nome": "João Silva",
       "cpf": "111.111.111-11",
       "tipo": "Convenio",
-      "status": "triagem",
+      "status": "aguardando_triagem",
+      "risco": null,
       "createdAt": "2026-08-13T12:32:02.640Z"
     }
   ],
   "triagens": [],
-  "consultas": []
+  "consultas": [],
+  "chamadas": []
 }
