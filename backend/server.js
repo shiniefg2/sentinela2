@@ -21,6 +21,7 @@ function readDB() {
     pacientes: [],
     triagens: [],
     consultas: [],
+    medicacoes: [], // <--- Adicionado para suportar o setor de medicação
     chamadas: [],
     altas: []
   };
