@@ -1,1 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alta Hospitalar - Baymax</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        body { background-color: #f4f6f9; padding: 20px; }
+        .container { display: flex; gap: 20px; max-width: 1200px; margin: 0 auto; }
+        .panel { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .list-panel { flex: 1; }
+        .form-panel { flex: 1.5; }
+        h2 { margin-bottom: 15px; color: #333; }
+        ul { list-style: none; }
+        li { padding: 12px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        button { cursor: pointer; padding: 8px 12px; border: none; border-radius: 4px; font-weight: bold; }
+        .btn-select { background-color: #3498db; color: #fff; }
+        .btn-submit { background-color: #e67e22; color: #fff; width: 100%; padding: 12px; font-size: 16px; margin-top: 15px; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        
+        /* Estilo do comprovante de alta */
+        .comprovante {
+            display: none;
+            background: #fff8e7;
+            border: 2px dashed #e67e22;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
 
+<div class="container">
+    <!-- PACIENTES AGUARDANDO ALTA -->
+    <div class="panel list-panel">
+        <h2>Aguardando Alta</h2>
+        <ul id="lista-pacientes">
+            <li>Carregando...</li>
+        </ul>
+    </div>
+
+    <!-- REGISTRO DE ALTA -->
+    <div class="panel form-panel">
+        <h2>Registrar Alta Médica</h2>
+        <form id="form-alta">
+            <input type="hidden" id="pacienteId">
+            
+            <div class="form-group">
+                <label>Paciente:</label>
+                <input type="text" id="paciente" readonly placeholder="Selecione um paciente na lista">
+            </div>
+
+            <div class="form-group">
+                <label>Tipo de Alta:</label>
+                <select id="tipoAlta" required>
+                    <option value="Alta Curado">Alta Médica - Melhorado / Curado</option>
+                    <option value="Alta a Pedido">Alta a Pedido do Paciente</option>
+                    <option value="Transferencia">Transferência Hospitalar</option>
+                    <option value="Evasao">Evasão / Desistência</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Orientações Pós-Alta / Receituário:</label>
+                <textarea id="orientacoes" rows="4" placeholder="Recomendações de descanso, medicação em casa, etc."></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">Confirmar e Liberar Paciente</button>
+        </form>
+
+        <!-- RESUMO DA ALTA GERADA -->
+        <div id="comprovante" class="comprovante">
+            <h3>Comprovante de Liberação</h3>
+            <p><strong>Paciente:</strong> <span id="comp-nome"></span></p>
+            <p><strong>Tipo de Alta:</strong> <span id="comp-tipo"></span></p>
+            <p><strong>Data/Hora:</strong> <span id="comp-data"></span></p>
+            <p><strong>Orientações:</strong> <span id="comp-orientacoes"></span></p>
+            <button onclick="window.print()" style="margin-top: 10px; background-color: #27ae60; color: #fff;">Imprimir Comprovante</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = "http://localhost:3000";
+
+    // CARREGAR PACIENTES ATENDIDOS QUE PRECISAM DE ALTA
+    async function carregarFila() {
+        try {
+            const res = await fetch(`${API_URL}/pacientes/atendidos`);
+            const pacientes = await res.json();
+
+            const lista = document.getElementById("lista-pacientes");
+            lista.innerHTML = "";
+
+            if (pacientes.length === 0) {
+                lista.innerHTML = "<li>Nenhum paciente aguardando alta.</li>";
+                return;
+            }
+
+            pacientes.forEach(p => {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <div>
+                        <strong>${p.nome}</strong><br>
+                        <small>CPF: ${p.cpf || '---'}</small>
+                    </div>
+                    <button class="btn-select" onclick="selecionarPaciente(${p.id}, '${p.nome}')">Dar Alta</button>
+                `;
+                lista.appendChild(li);
+            });
+        } catch (error) {
+            console.error("Erro ao carregar lista de alta:", error);
+        }
+    }
+
+    // SELECIONAR PACIENTE
+    function selecionarPaciente(id, nome) {
+        document.getElementById("pacienteId").value = id;
+        document.getElementById("paciente").value = nome;
+        document.getElementById("comprovante").style.display = "none";
+    }
+
+    // REGISTRAR ALTA
+    document.getElementById("form-alta").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const pacienteId = document.getElementById("pacienteId").value;
+        if (!pacienteId) {
+            alert("Selecione um paciente na lista!");
+            return;
+        }
+
+        const dados = {
+            pacienteId: Number(pacienteId),
+            tipoAlta: document.getElementById("tipoAlta").value,
+            orientacoes: document.getElementById("orientacoes").value
+        };
+
+        try {
+            const res = await fetch(`${API_URL}/alta`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dados)
+            });
+
+            const resposta = await res.json();
+
+            if (res.ok) {
+                alert("Alta registrada com sucesso!");
+                
+                // Exibe o comprovante
+                document.getElementById("comp-nome").innerText = document.getElementById("paciente").value;
+                document.getElementById("comp-tipo").innerText = dados.tipoAlta;
+                document.getElementById("comp-data").innerText = new Date().toLocaleString("pt-BR");
+                document.getElementById("comp-orientacoes").innerText = dados.orientacoes || "Sem observações.";
+                document.getElementById("comprovante").style.display = "block";
+
+                document.getElementById("form-alta").reset();
+                carregarFila();
+            } else {
+                alert(resposta.erro || "Erro ao registrar alta.");
+            }
+        } catch (error) {
+            console.error("Erro ao dar alta:", error);
+        }
+    });
+
+    carregarFila();
+    setInterval(carregarFila, 5000);
+</script>
+
+</body>
+</html>
