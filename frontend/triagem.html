@@ -355,6 +355,20 @@
   <div class="container">
     <img src="css/Captura de tela 2026-08-06 114854.png" width="54px" height="54px">
     <h2> Triagem Baymax</h2>
+       <button class="btn-abrir-tv" onclick="window.open('tv.html','_blank')">📺Abrir Tela da TV</button>
+</div>   
+
+<div class="pacientes-fila">
+    <h3>
+    Pacientes Cadastrados no Atendimento
+    <span>Clique em "Chamar na TV" para chamar ao guinche</span>
+ </h3>
+ <div id="fila-pacientes">
+    <p style="color: #ccc; text-align: center;" >Carregando...</p>
+ </div>
+ <button onclick="carregarPacientes()" style="margin-top: 8px;
+ background: wheat; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px;">Atualizar lista</button>
+</div>
     <input id="nome" placeholder="Nome">
 
     <select id="sintoma">
