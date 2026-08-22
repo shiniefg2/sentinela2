@@ -11,7 +11,7 @@
       "tipo": "medico"
     },
     {
-      "usuario": "atendiento",
+      "usuario": "atendimento",
       "senha": "123",
       "tipo": "atendimento"
     }
