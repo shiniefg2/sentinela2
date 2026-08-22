@@ -1,66 +1,154 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="pt-br">
 <head>
-  <link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medicação / Enfermagem - Baymax</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        body { background-color: #f4f6f9; padding: 20px; }
+        .container { display: flex; gap: 20px; max-width: 1200px; margin: 0 auto; }
+        .panel { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .list-panel { flex: 1; }
+        .form-panel { flex: 1.5; }
+        h2 { margin-bottom: 15px; color: #333; }
+        ul { list-style: none; }
+        li { padding: 12px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        button { cursor: pointer; padding: 8px 12px; border: none; border-radius: 4px; font-weight: bold; }
+        .btn-call { background-color: #f39c12; color: #fff; margin-right: 5px; }
+        .btn-select { background-color: #3498db; color: #fff; }
+        .btn-submit { background-color: #27ae60; color: #fff; width: 100%; padding: 12px; font-size: 16px; margin-top: 15px; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .prescricao-box { background-color: #e8f4f8; border-left: 4px solid #3498db; padding: 10px; margin-bottom: 15px; }
+    </style>
 </head>
-
 <body>
 
-  <div class="container">
+<div class="container">
+    <!-- FILA DE MEDICAÇÃO -->
+    <div class="panel list-panel">
+        <h2>Aguardando Medicação</h2>
+        <ul id="lista-pacientes">
+            <li>Carregando...</li>
+        </ul>
+    </div>
 
-    <h2>💊 Medicações Prescritas</h2>
+    <!-- APLICAÇÃO DE MEDICAÇÃO -->
+    <div class="panel form-panel">
+        <h2>Sala de Medicamento</h2>
+        <form id="form-medicacao">
+            <input type="hidden" id="pacienteId">
+            
+            <div class="form-group">
+                <label>Paciente:</label>
+                <input type="text" id="paciente" readonly placeholder="Selecione um paciente na lista">
+            </div>
 
-    <!-- IMPLEMENTADO: local onde a lista de medicações será exibida -->
-    <div id="listaMedicacoes"></div>
+            <div class="prescricao-box">
+                <p><strong>Prescrição Médica:</strong></p>
+                <p id="prescricao-texto">Selecione um paciente para ver a receita.</p>
+            </div>
 
-  </div>
+            <div class="form-group">
+                <label>Observações do Enfermeiro(a):</label>
+                <textarea id="obs" rows="3" placeholder="Ex: Medicação administrada via oral sem intercorrências."></textarea>
+            </div>
 
-  <script>
+            <button type="submit" class="btn-submit">Concluir Medicação e Enviar para Alta</button>
+        </form>
+    </div>
+</div>
 
-    // IMPLEMENTADO: busca as consultas salvas e mostra as medicações
-    function carregarMedicacoesPrescritas() {
-      fetch("/medicacoes")
-        .then(r => r.json())
-        .then(data => {
-          const div = document.getElementById("listaMedicacoes");
+<script>
+    const API_URL = "http://localhost:3000";
 
-          div.innerHTML = "";
+    // CARREGAR PACIENTES ENVIADOS PELO MÉDICO
+    async function carregarFila() {
+        try {
+            const res = await fetch(`${API_URL}/pacientes/medicacao`);
+            const pacientes = await res.json();
 
-          if (data.length === 0) {
-            div.innerHTML = "<p>Nenhuma medicação prescrita.</p>";
-            return;
-          }
+            const lista = document.getElementById("lista-pacientes");
+            lista.innerHTML = "";
 
-          data.forEach(c => {
-            div.innerHTML += `
-          <div class="card">
-            <h3>${c.paciente}</h3>
+            if (pacientes.length === 0) {
+                lista.innerHTML = "<li>Nenhum paciente aguardando medicação.</li>";
+                return;
+            }
 
-            <p>
-              <b>Medicação:</b>
-              ${c.medicacao}
-            </p>
-
-            <p>
-              <b>Diagnóstico:</b>
-              ${c.diagnostico}
-            </p>
-
-            <p>
-              <b>Observações:</b>
-              ${c.obs || "Nenhuma"}
-            </p>
-          </div>
-        `;
-          });
-        });
+            pacientes.forEach(p => {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <div>
+                        <strong>${p.nome}</strong><br>
+                        <small>Remédio: ${p.prescricao}</small>
+                    </div>
+                    <div>
+                        <button class="btn-call" onclick="chamarTV('${p.nome}')">Chamar TV</button>
+                        <button class="btn-select" onclick='selecionarPaciente(${JSON.stringify(p)})'>Atender</button>
+                    </div>
+                `;
+                lista.appendChild(li);
+            });
+        } catch (error) {
+            console.error("Erro ao carregar fila de medicação:", error);
+        }
     }
 
-    carregarMedicacoesPrescritas();
+    // CHAMAR TV
+    async function chamarTV(nome) {
+        await fetch(`${API_URL}/tv/chamar`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                paciente: nome,
+                localTipo: "MEDICAÇÃO",
+                localNumero: "SALA 01"
+            })
+        });
+        alert(`Paciente ${nome} chamado na Medicação!`);
+    }
 
-  </script>
+    // SELECIONAR PACIENTE
+    function selecionarPaciente(paciente) {
+        document.getElementById("pacienteId").value = paciente.id;
+        document.getElementById("paciente").value = paciente.nome;
+        document.getElementById("prescricao-texto").innerText = paciente.prescricao || "Nenhuma prescrição informada.";
+    }
+
+    // FINALIZAR MEDICAÇÃO
+    document.getElementById("form-medicacao").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const pacienteId = document.getElementById("pacienteId").value;
+        if (!pacienteId) {
+            alert("Selecione um paciente na lista!");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/medicacao/aplicar`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ pacienteId: Number(pacienteId) })
+            });
+
+            if (res.ok) {
+                alert("Medicação aplicada com sucesso! Paciente encaminhado para Alta.");
+                document.getElementById("form-medicacao").reset();
+                document.getElementById("prescricao-texto").innerText = "Selecione um paciente para ver a receita.";
+                carregarFila();
+            }
+        } catch (error) {
+            console.error("Erro ao aplicar medicação:", error);
+        }
+    });
+
+    carregarFila();
+    setInterval(carregarFila, 5000);
+</script>
 
 </body>
-
 </html>
