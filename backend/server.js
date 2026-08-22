@@ -21,7 +21,8 @@ function readDB() {
     pacientes: [],
     triagens: [],
     consultas: [],
-    chamadas: []
+    chamadas: [],
+    altas: []
   };
 
   if (!fs.existsSync(DB_FILE)) {
@@ -66,7 +67,6 @@ app.post("/login", (req, res) => {
 // RECEPÇÃO (ATENDIMENTO)
 // =====================================================
 
-// Cadastra o paciente e coloca na fila de triagem
 app.post("/atendimento", (req, res) => {
   const db = readDB();
 
@@ -89,14 +89,12 @@ app.post("/atendimento", (req, res) => {
 // TRIAGEM
 // =====================================================
 
-// Lista pacientes que estão aguardando triagem
 app.get("/pacientes/triagem", (req, res) => {
   const db = readDB();
   const pendentes = db.pacientes.filter(p => p.status === "aguardando_triagem");
   res.json(pendentes);
 });
 
-// Registra a triagem e altera o status do paciente para o médico
 app.post("/triagem", (req, res) => {
   const db = readDB();
 
@@ -123,7 +121,6 @@ app.post("/triagem", (req, res) => {
 
   db.triagens.push(triagem);
 
-  // Atualiza o status na lista de pacientes
   const paciente = db.pacientes.find(
     p => p.id === Number(req.body.pacienteId) || p.nome === req.body.nome
   );
@@ -137,7 +134,6 @@ app.post("/triagem", (req, res) => {
   res.json(triagem);
 });
 
-// Lista todas as triagens realizadas
 app.get("/triagens", (req, res) => {
   const db = readDB();
   res.json(db.triagens);
@@ -147,14 +143,12 @@ app.get("/triagens", (req, res) => {
 // CONSULTA MÉDICA
 // =====================================================
 
-// Lista pacientes prontos para o atendimento médico
 app.get("/pacientes/medico", (req, res) => {
   const db = readDB();
   const aguardandoMedico = db.pacientes.filter(p => p.status === "aguardando_medico");
   res.json(aguardandoMedico);
 });
 
-// Registra a consulta realizada e encerra o fluxo do paciente
 app.post("/consulta", (req, res) => {
   const db = readDB();
 
@@ -170,7 +164,6 @@ app.post("/consulta", (req, res) => {
 
   db.consultas.push(consulta);
 
-  // Atualiza status do paciente para finalizado
   const paciente = db.pacientes.find(
     p => p.id === Number(req.body.pacienteId) || p.nome === req.body.paciente
   );
@@ -183,7 +176,6 @@ app.post("/consulta", (req, res) => {
   res.json(consulta);
 });
 
-// Lista de medicações padrão
 app.get("/lista-medicacoes", (req, res) => {
   res.json([
     "Dipirona",
@@ -199,16 +191,55 @@ app.get("/lista-medicacoes", (req, res) => {
   ]);
 });
 
-app.get("/medicacoes", (req, res) => {
+// =====================================================
+// ALTA MÉDICA
+// =====================================================
+
+app.get("/pacientes/atendidos", (req, res) => {
   const db = readDB();
-  res.json(db.consultas);
+  const atendidos = db.pacientes.filter(p => p.status === "atendido");
+  res.json(atendidos);
+});
+
+app.post("/alta", (req, res) => {
+  const db = readDB();
+
+  const pacienteId = Number(req.body.pacienteId);
+  const paciente = db.pacientes.find(p => p.id === pacienteId);
+
+  if (!paciente) {
+    return res.status(404).json({ erro: "Paciente não encontrado" });
+  }
+
+  paciente.status = "alta";
+  paciente.dataAlta = new Date();
+
+  const registroAlta = {
+    id: Date.now(),
+    pacienteId,
+    paciente: paciente.nome,
+    tipoAlta: req.body.tipoAlta,
+    orientacoes: req.body.orientacoes,
+    createdAt: new Date()
+  };
+
+  if (!db.altas) db.altas = [];
+  db.altas.push(registroAlta);
+
+  writeDB(db);
+
+  res.json({ sucesso: true, registroAlta });
+});
+
+app.get("/altas", (req, res) => {
+  const db = readDB();
+  res.json(db.altas || []);
 });
 
 // =====================================================
 // TV - CHAMADAS
 // =====================================================
 
-// Retorna chamada atual e o histórico
 app.get("/tv/chamada", (req, res) => {
   const db = readDB();
   const chamadas = db.chamadas || [];
@@ -222,7 +253,6 @@ app.get("/tv/chamada", (req, res) => {
   });
 });
 
-// Chamar paciente na TV (Guichê / Consultório)
 app.post("/tv/chamar", (req, res) => {
   const db = readDB();
 
@@ -252,7 +282,6 @@ app.post("/tv/chamar", (req, res) => {
   });
 });
 
-// Limpar histórico da TV
 app.delete("/tv/chamada", (req, res) => {
   const db = readDB();
   db.chamadas = [];
@@ -265,7 +294,7 @@ app.delete("/tv/chamada", (req, res) => {
 });
 
 // =====================================================
-// INICIALIZAÇÃO
+// INICIALIZAÇÃO DO SERVIDOR
 // =====================================================
 
 const PORT = process.env.PORT || 3000;
