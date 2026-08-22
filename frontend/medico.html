@@ -3,19 +3,147 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Atendimento Médico</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Atendimento Médico - Baymax</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f0f4f8;
+      color: #334155;
+    }
+
+    .topbar {
+      background-color: #0284c7;
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .topbar h1 {
+      font-size: 20px;
+    }
+
+    /* Ajuste para o botão não esticar */
+    .topbar button {
+      background-color: #ef4444;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      width: auto; 
+    }
+
+    .topbar button:hover {
+      background-color: #dc2626;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .card h2 {
+      color: #0284c7;
+      font-size: 18px;
+      margin-bottom: 16px;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 8px;
+    }
+
+    .pacientes-list {
+      list-style: none;
+    }
+
+    .paciente-item {
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .paciente-item:hover {
+      border-color: #0284c7;
+      background-color: #f0f9ff;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      background-color: white;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: #0284c7;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+
+    button[type="submit"] {
+      background-color: #0284c7;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #0369a1;
+    }
+  </style>
 </head>
 <body>
 
   <header class="topbar">
-    <h1>Atendimento Médico</h1>
+    <h1>Atendimento Médico - Baymax</h1>
     <button onclick="logout()">Sair</button>
   </header>
 
   <main class="container">
     <div class="card">
-      <h2>Aguardando Atendimento Médico</h2>
+      <h2>Aguardando Atendimento</h2>
       <ul id="listaFila" class="pacientes-list">
         <li>Carregando fila...</li>
       </ul>
@@ -32,8 +160,10 @@
         <label for="diagnostico">Diagnóstico / Anamnese:</label>
         <textarea id="diagnostico" placeholder="Descreva os sintomas e o diagnóstico..." rows="3" required></textarea>
 
-        <label for="medicacao">Prescrição de Medicamentos (Enfermagem):</label>
-        <textarea id="medicacao" placeholder="Caso precise de medicação na unidade, descreva aqui. Se não precisar, deixe em branco." rows="3"></textarea>
+        <label for="medicacao">Prescrição de Medicamentos:</label>
+        <select id="medicacao">
+          <option value="">Nenhuma medicação necessária</option>
+        </select>
 
         <label for="obs">Observações / Orientações:</label>
         <input type="text" id="obs" placeholder="Ex: Repouso, beber bastante água...">
@@ -44,31 +174,47 @@
   </main>
 
   <script>
-    const API_URL = "http://localhost:3000";
-
-    // 1. Verificar Autenticação
+    // 1. Autenticação
     const usuarioLogado = JSON.parse(sessionStorage.getItem("usuario"));
-    if (!usuarioLogado || usuarioLogado.tipo !== "medico") {
-      window.location.href = "login.html";
+    if (!usuarioLogado) {
+      window.location.href = "/";
     }
 
     function logout() {
       sessionStorage.removeItem("usuario");
-      window.location.href = "login.html";
+      window.location.href = "/";
     }
 
-    // 2. Carregar Fila de Espera (Apenas status 'aguardando_medico')
+    // 2. Buscar Lista de Medicações do Backend
+    async function carregarMedicacoes() {
+      try {
+        const res = await fetch("/lista-medicacoes");
+        const lista = await res.json();
+        const select = document.getElementById("medicacao");
+
+        lista.forEach(item => {
+          const opt = document.createElement("option");
+          opt.value = item;
+          opt.textContent = item;
+          select.appendChild(opt);
+        });
+      } catch (error) {
+        console.error("Erro ao carregar medicações:", error);
+      }
+    }
+
+    // 3. Carregar Fila de Espera
     async function carregarFila() {
       const listaFila = document.getElementById("listaFila");
       listaFila.innerHTML = "<li>Carregando fila...</li>";
 
       try {
-        const res = await fetch(`${API_URL}/pacientes?status=aguardando_medico`);
+        const res = await fetch("/pacientes/medico");
         const pacientes = await res.json();
 
         listaFila.innerHTML = "";
 
-        if (pacientes.length === 0) {
+        if (!pacientes || pacientes.length === 0) {
           listaFila.innerHTML = "<li>Nenhum paciente aguardando no momento.</li>";
           return;
         }
@@ -77,26 +223,25 @@
           const li = document.createElement("li");
           li.classList.add("paciente-item");
           li.innerHTML = `
-            <strong>${p.nome}</strong> - Idade: ${p.idade || 'N/I'} <br>
-            <small>Prioridade: ${p.prioridade || 'Normal'}</small>
+            <strong>${p.nome}</strong><br>
+            <small>CPF: ${p.cpf || 'Não informado'}</small>
           `;
           li.onclick = () => selecionarPaciente(p);
           listaFila.appendChild(li);
         });
       } catch (error) {
-        console.error("Erro ao buscar fila do médico:", error);
+        console.error("Erro ao buscar fila:", error);
         listaFila.innerHTML = "<li>Erro ao carregar pacientes.</li>";
       }
     }
 
-    // 3. Preencher Formulário com o Paciente Selecionado
     function selecionarPaciente(paciente) {
       document.getElementById("pacienteId").value = paciente.id;
       document.getElementById("paciente").value = paciente.nome;
       document.getElementById("diagnostico").focus();
     }
 
-    // 4. Salvar Consulta Médica e Encaminhar
+    // 4. Salvar Consulta
     document.getElementById("form-consulta").addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -106,55 +251,35 @@
         return;
       }
 
-      const medicacaoTexto = document.getElementById("medicacao").value.trim();
-      
-      // Define o próximo status: se houver medicação vai pra enfermagem, senão vai direto pra alta
-      const proximoStatus = medicacaoTexto ? "aguardando_medicacao" : "aguardando_alta";
-
       const dadosConsulta = {
         pacienteId: Number(pacienteId),
         paciente: document.getElementById("paciente").value,
         diagnostico: document.getElementById("diagnostico").value,
-        medicacao: medicacaoTexto,
-        obs: document.getElementById("obs").value,
-        dataHora: new Date().toISOString()
+        medicacao: document.getElementById("medicacao").value,
+        obs: document.getElementById("obs").value
       };
 
       try {
-        // Salva o registro da consulta
-        const resConsulta = await fetch(`${API_URL}/consultas`, {
+        const resConsulta = await fetch("/consulta", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(dadosConsulta)
         });
 
-        // Atualiza o status do paciente
-        const resStatus = await fetch(`${API_URL}/pacientes/${pacienteId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: proximoStatus })
-        });
-
-        if (resConsulta.ok && resStatus.ok) {
-          if (medicacaoTexto) {
-            alert("Consulta finalizada! Paciente encaminhado para a ENFERMAGEM/MEDICAÇÃO.");
-          } else {
-            alert("Consulta finalizada! Paciente encaminhado direto para a ALTA.");
-          }
-          
+        if (resConsulta.ok) {
+          alert("Consulta finalizada com sucesso!");
           document.getElementById("form-consulta").reset();
           document.getElementById("pacienteId").value = "";
           carregarFila();
         } else {
-          alert("Erro ao salvar consulta. Tente novamente.");
+          alert("Erro ao salvar consulta.");
         }
       } catch (error) {
-        console.error("Erro ao salvar consulta:", error);
         alert("Erro de conexão com o servidor.");
       }
     });
 
-    // Inicia a fila ao carregar a página
+    carregarMedicacoes();
     carregarFila();
   </script>
 </body>
