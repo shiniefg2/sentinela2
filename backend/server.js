@@ -169,7 +169,12 @@ app.post("/consulta", (req, res) => {
   );
 
   if (paciente) {
-    paciente.status = "atendido";
+    // Valida se o médico prescreveu medicação
+    if (req.body.medicacao && req.body.medicacao.trim() !== "") {
+      paciente.status = "aguardando_medicacao";
+    } else {
+      paciente.status = "aguardando_alta";
+    }
   }
 
   writeDB(db);
@@ -192,13 +197,54 @@ app.get("/lista-medicacoes", (req, res) => {
 });
 
 // =====================================================
+// MEDICAÇÃO / ENFERMAGEM
+// =====================================================
+
+// Lista apenas quem tem medicação pendente enviada pelo médico
+app.get("/pacientes/medicacao", (req, res) => {
+  const db = readDB();
+  const emMedicacao = db.pacientes.filter(p => p.status === "aguardando_medicacao");
+
+  // Anexa os dados da consulta (receita médica) para visualização da enfermagem
+  const resultado = emMedicacao.map(p => {
+    const ultimaConsulta = db.consultas.filter(c => c.pacienteId === p.id).pop();
+    return {
+      ...p,
+      prescricao: ultimaConsulta ? ultimaConsulta.medicacao : "Não informada",
+      diagnostico: ultimaConsulta ? ultimaConsulta.diagnostico : "N/A"
+    };
+  });
+
+  res.json(resultado);
+});
+
+// Confirmar aplicação de medicação
+app.post("/medicacao/aplicar", (req, res) => {
+  const db = readDB();
+  const pacienteId = Number(req.body.pacienteId);
+
+  const paciente = db.pacientes.find(p => p.id === pacienteId);
+
+  if (!paciente) {
+    return res.status(404).json({ erro: "Paciente não encontrado" });
+  }
+
+  // Avança o paciente para a fila da Alta
+  paciente.status = "aguardando_alta";
+  writeDB(db);
+
+  res.json({ sucesso: true, mensagem: "Medicação concluída. Encaminhado para alta." });
+});
+
+// =====================================================
 // ALTA MÉDICA
 // =====================================================
 
+// Lista apenas quem concluiu a medicação (ou foi liberado sem medicação pelo médico)
 app.get("/pacientes/atendidos", (req, res) => {
   const db = readDB();
-  const atendidos = db.pacientes.filter(p => p.status === "atendido");
-  res.json(atendidos);
+  const prontosParaAlta = db.pacientes.filter(p => p.status === "aguardando_alta");
+  res.json(prontosParaAlta);
 });
 
 app.post("/alta", (req, res) => {
@@ -294,7 +340,7 @@ app.delete("/tv/chamada", (req, res) => {
 });
 
 // =====================================================
-// INICIALIZAÇÃO DO SERVIDOR
+// INICIALIZAÇÃO
 // =====================================================
 
 const PORT = process.env.PORT || 3000;
