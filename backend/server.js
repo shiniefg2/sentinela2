@@ -7,9 +7,17 @@ const app = express();
 
 app.use(express.json());
 app.use(cors());
-app.use(express.static(path.join(__dirname, "../frontend")));
+
+// Servir os arquivos estáticos do frontend
+const frontendPath = path.resolve(__dirname, "../frontend");
+app.use(express.static(frontendPath));
 
 const DB_FILE = path.join(__dirname, "db.json");
+
+// Redireciona a raiz para o index.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
+});
 
 // =====================================================
 // BANCO DE DADOS LOCAL
@@ -21,14 +29,12 @@ function readDB() {
     pacientes: [],
     triagens: [],
     consultas: [],
-    medicacoes: [], // <--- Adicionado para suportar o setor de medicação
+    medicacoes: [],
     chamadas: [],
     altas: []
   };
 
-  if (!fs.existsSync(DB_FILE)) {
-    return defaultDB;
-  }
+  if (!fs.existsSync(DB_FILE)) return defaultDB;
 
   try {
     const db = JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
@@ -48,7 +54,7 @@ function writeDB(data) {
 }
 
 // =====================================================
-// LOGIN
+// API - LOGIN
 // =====================================================
 
 app.post("/login", (req, res) => {
@@ -65,12 +71,11 @@ app.post("/login", (req, res) => {
 });
 
 // =====================================================
-// RECEPÇÃO (ATENDIMENTO)
+// API - ROTAS DOS SETORES
 // =====================================================
 
 app.post("/atendimento", (req, res) => {
   const db = readDB();
-
   const paciente = {
     id: Date.now(),
     nome: req.body.nome,
@@ -79,38 +84,26 @@ app.post("/atendimento", (req, res) => {
     status: "aguardando_triagem",
     createdAt: new Date()
   };
-
   db.pacientes.push(paciente);
   writeDB(db);
-
   res.json(paciente);
 });
 
-// =====================================================
-// TRIAGEM
-// =====================================================
-
 app.get("/pacientes/triagem", (req, res) => {
   const db = readDB();
-  const pendentes = db.pacientes.filter(p => p.status === "aguardando_triagem");
-  res.json(pendentes);
+  res.json(db.pacientes.filter(p => p.status === "aguardando_triagem"));
 });
 
 app.post("/triagem", (req, res) => {
   const db = readDB();
-
   let risco = req.body.risco;
-  if (req.body.temperatura >= 39) {
-    risco = "vermelho";
-  } else if (req.body.temperatura >= 38) {
-    risco = "amarelo";
-  } else if (!risco) {
-    risco = "verde";
-  }
+  if (req.body.temperatura >= 39) risco = "vermelho";
+  else if (req.body.temperatura >= 38) risco = "amarelo";
+  else if (!risco) risco = "verde";
 
   const triagem = {
     id: Date.now(),
-    pacienteId: req.body.pacienteId,
+    pacienteId: Number(req.body.pacienteId),
     nome: req.body.nome,
     sintoma: req.body.sintoma,
     temperatura: req.body.temperatura,
@@ -123,7 +116,7 @@ app.post("/triagem", (req, res) => {
   db.triagens.push(triagem);
 
   const paciente = db.pacientes.find(
-    p => p.id === Number(req.body.pacienteId) || p.nome === req.body.nome
+    p => Number(p.id) === Number(req.body.pacienteId) || p.nome === req.body.nome
   );
 
   if (paciente) {
@@ -140,22 +133,16 @@ app.get("/triagens", (req, res) => {
   res.json(db.triagens);
 });
 
-// =====================================================
-// CONSULTA MÉDICA
-// =====================================================
-
 app.get("/pacientes/medico", (req, res) => {
   const db = readDB();
-  const aguardandoMedico = db.pacientes.filter(p => p.status === "aguardando_medico");
-  res.json(aguardandoMedico);
+  res.json(db.pacientes.filter(p => p.status === "aguardando_medico"));
 });
 
 app.post("/consulta", (req, res) => {
   const db = readDB();
-
   const consulta = {
     id: Date.now(),
-    pacienteId: req.body.pacienteId,
+    pacienteId: Number(req.body.pacienteId),
     paciente: req.body.paciente,
     diagnostico: req.body.diagnostico,
     medicacao: req.body.medicacao,
@@ -166,12 +153,11 @@ app.post("/consulta", (req, res) => {
   db.consultas.push(consulta);
 
   const paciente = db.pacientes.find(
-    p => p.id === Number(req.body.pacienteId) || p.nome === req.body.paciente
+    p => Number(p.id) === Number(req.body.pacienteId) || p.nome === req.body.paciente
   );
 
   if (paciente) {
-    // Valida se o médico prescreveu medicação
-    if (req.body.medicacao && req.body.medicacao.trim() !== "") {
+    if (req.body.medicacao && String(req.body.medicacao).trim() !== "") {
       paciente.status = "aguardando_medicacao";
     } else {
       paciente.status = "aguardando_alta";
@@ -184,86 +170,50 @@ app.post("/consulta", (req, res) => {
 
 app.get("/lista-medicacoes", (req, res) => {
   res.json([
-    "Dipirona",
-    "Paracetamol",
-    "Ibuprofeno",
-    "Amoxicilina",
-    "Azitromicina",
-    "Loratadina",
-    "Omeprazol",
-    "Buscopan",
-    "Dramin",
-    "Soro fisiológico"
+    "Dipirona", "Paracetamol", "Ibuprofeno", "Amoxicilina",
+    "Azitromicina", "Loratadina", "Omeprazol", "Buscopan", "Dramin", "Soro fisiológico"
   ]);
 });
 
-// =====================================================
-// MEDICAÇÃO / ENFERMAGEM
-// =====================================================
-
-// Lista apenas quem tem medicação pendente enviada pelo médico
 app.get("/pacientes/medicacao", (req, res) => {
   const db = readDB();
   const emMedicacao = db.pacientes.filter(p => p.status === "aguardando_medicacao");
-
-  // Anexa os dados da consulta (receita médica) para visualização da enfermagem
   const resultado = emMedicacao.map(p => {
-    const ultimaConsulta = db.consultas.filter(c => c.pacienteId === p.id).pop();
+    const ultimaConsulta = db.consultas.filter(c => Number(c.pacienteId) === Number(p.id) || c.paciente === p.nome).pop();
     return {
       ...p,
       prescricao: ultimaConsulta ? ultimaConsulta.medicacao : "Não informada",
       diagnostico: ultimaConsulta ? ultimaConsulta.diagnostico : "N/A"
     };
   });
-
   res.json(resultado);
 });
 
-// Confirmar aplicação de medicação
 app.post("/medicacao/aplicar", (req, res) => {
   const db = readDB();
-  const pacienteId = Number(req.body.pacienteId);
-
-  const paciente = db.pacientes.find(p => p.id === pacienteId);
-
-  if (!paciente) {
-    return res.status(404).json({ erro: "Paciente não encontrado" });
-  }
-
-  // Avança o paciente para a fila da Alta
+  const paciente = db.pacientes.find(p => Number(p.id) === Number(req.body.pacienteId));
+  if (!paciente) return res.status(404).json({ erro: "Paciente não encontrado" });
   paciente.status = "aguardando_alta";
   writeDB(db);
-
   res.json({ sucesso: true, mensagem: "Medicação concluída. Encaminhado para alta." });
 });
 
-// =====================================================
-// ALTA MÉDICA
-// =====================================================
-
-// Lista apenas quem concluiu a medicação (ou foi liberado sem medicação pelo médico)
 app.get("/pacientes/atendidos", (req, res) => {
   const db = readDB();
-  const prontosParaAlta = db.pacientes.filter(p => p.status === "aguardando_alta");
-  res.json(prontosParaAlta);
+  res.json(db.pacientes.filter(p => p.status === "aguardando_alta"));
 });
 
 app.post("/alta", (req, res) => {
   const db = readDB();
-
-  const pacienteId = Number(req.body.pacienteId);
-  const paciente = db.pacientes.find(p => p.id === pacienteId);
-
-  if (!paciente) {
-    return res.status(404).json({ erro: "Paciente não encontrado" });
-  }
+  const paciente = db.pacientes.find(p => Number(p.id) === Number(req.body.pacienteId));
+  if (!paciente) return res.status(404).json({ erro: "Paciente não encontrado" });
 
   paciente.status = "alta";
   paciente.dataAlta = new Date();
 
   const registroAlta = {
     id: Date.now(),
-    pacienteId,
+    pacienteId: paciente.id,
     paciente: paciente.nome,
     tipoAlta: req.body.tipoAlta,
     orientacoes: req.body.orientacoes,
@@ -272,9 +222,7 @@ app.post("/alta", (req, res) => {
 
   if (!db.altas) db.altas = [];
   db.altas.push(registroAlta);
-
   writeDB(db);
-
   res.json({ sucesso: true, registroAlta });
 });
 
@@ -283,69 +231,38 @@ app.get("/altas", (req, res) => {
   res.json(db.altas || []);
 });
 
-// =====================================================
-// TV - CHAMADAS
-// =====================================================
-
 app.get("/tv/chamada", (req, res) => {
   const db = readDB();
   const chamadas = db.chamadas || [];
-
-  const chamada = chamadas.length > 0 ? chamadas[chamadas.length - 1] : null;
-  const historico = [...chamadas].reverse().slice(1);
-
   res.json({
-    chamada,
-    historico
+    chamada: chamadas.length > 0 ? chamadas[chamadas.length - 1] : null,
+    historico: [...chamadas].reverse().slice(1)
   });
 });
 
 app.post("/tv/chamar", (req, res) => {
   const db = readDB();
-
-  const paciente = req.body.paciente || req.body.nome || "PACIENTE";
-  const localTipo = req.body.localTipo || "GUICHÊ";
-  const localNumero = req.body.localNumero || "---";
-
   const chamada = {
     id: Date.now(),
-    paciente,
-    localTipo,
-    localNumero,
+    paciente: req.body.paciente || req.body.nome || "PACIENTE",
+    localTipo: req.body.localTipo || "GUICHÊ",
+    localNumero: req.body.localNumero || "---",
     createdAt: new Date()
   };
-
   db.chamadas.push(chamada);
-
-  if (db.chamadas.length > 50) {
-    db.chamadas = db.chamadas.slice(-50);
-  }
-
+  if (db.chamadas.length > 50) db.chamadas = db.chamadas.slice(-50);
   writeDB(db);
-
-  res.json({
-    sucesso: true,
-    chamada
-  });
+  res.json({ sucesso: true, chamada });
 });
 
 app.delete("/tv/chamada", (req, res) => {
   const db = readDB();
   db.chamadas = [];
   writeDB(db);
-
-  res.json({
-    sucesso: true,
-    mensagem: "Chamadas da TV removidas"
-  });
+  res.json({ sucesso: true, mensagem: "Chamadas da TV removidas" });
 });
 
-// =====================================================
-// INICIALIZAÇÃO
-// =====================================================
-
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
