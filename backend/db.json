@@ -1,6 +1,11 @@
 {
   "usuarios": [
     {
+      "usuario": "atendimento",
+      "senha": "123",
+      "tipo": "atendimento"
+    },
+    {
       "usuario": "triagem",
       "senha": "123",
       "tipo": "triagem"
@@ -11,22 +16,17 @@
       "tipo": "medico"
     },
     {
-      "usuario": "atendimento",
+      "usuario": "enfermagem",
       "senha": "123",
-      "tipo": "atendimento"
-    }
-  ],
-  "pacientes": [
+      "tipo": "enfermagem"
+    },
     {
-      "id": 1786624322640,
-      "nome": "João Silva",
-      "cpf": "111.111.111-11",
-      "tipo": "Convenio",
-      "status": "atendido",
-      "risco": "verde",
-      "createdAt": "2026-08-13T12:32:02.640Z"
+      "usuario": "alta",
+      "senha": "123",
+      "tipo": "alta"
     }
   ],
+  "pacientes": [],
   "triagens": [],
   "consultas": [],
   "chamadas": [],
