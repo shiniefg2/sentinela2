@@ -16,9 +16,9 @@
       "tipo": "medico"
     },
     {
-      "usuario": "enfermagem",
-      "senha": "123",
-      "tipo": "enfermagem"
+     "usuario": "medicacao",
+  "senha": "123",
+  "tipo": "medicacao"
     },
     {
       "usuario": "alta",
