@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 
 <head>
   <meta charset="UTF-8">
@@ -13,7 +13,6 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
     }
 
-
     body {
       background-color: #f0f4f8;
       display: flex;
@@ -21,7 +20,6 @@
       align-items: center;
       height: 100vh;
     }
-
 
     .container {
       background-color: #ffffff;
@@ -33,13 +31,11 @@
       text-align: center;
     }
 
-
     .container h2 {
       color: #0284c7;
       margin-bottom: 24px;
       font-size: 24px;
     }
-
 
     .container input {
       width: 100%;
@@ -57,12 +53,10 @@
       box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
     }
 
-
     .container input.error {
       border-color: #ef4444;
       box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
     }
-
 
     #msg-erro {
       color: #ef4444;
@@ -70,7 +64,6 @@
       margin-bottom: 12px;
       display: none;
     }
-
 
     .container button {
       width: 100%;
@@ -102,65 +95,80 @@
     <input id="usuario" placeholder="Usuário" oninput="removerErro(this)">
     <input id="senha" type="password" placeholder="Senha" oninput="removerErro(this)">
     <button onclick="login()">Entrar</button>
+    <button onclick="location.href='tv.html'" style="background-color: #0284c7; margin-top: 10px;">
+  Abrir Painel TV
+</button>
   </div>
 
-  <script>
-    function removerErro(input) {
-      input.classList.remove("error");
-      document.getElementById("msg-erro").style.display = "none";
+<script>
+  function removerErro(input) {
+    input.classList.remove("error");
+    document.getElementById("msg-erro").style.display = "none";
+  }
+
+  async function login() {
+    const inputUsuario = document.getElementById("usuario");
+    const inputSenha = document.getElementById("senha");
+    const msgErro = document.getElementById("msg-erro");
+
+    let valido = true;
+
+    if (!inputUsuario.value.trim()) {
+      inputUsuario.classList.add("error");
+      valido = false;
     }
 
-    function login() {
-      const inputUsuario = document.getElementById("usuario");
-      const inputSenha = document.getElementById("senha");
-      const msgErro = document.getElementById("msg-erro");
+    if (!inputSenha.value.trim()) {
+      inputSenha.classList.add("error");
+      valido = false;
+    }
 
-      let valido = true;
+    if (!valido) {
+      msgErro.innerText = "Por favor, preencha todos os campos.";
+      msgErro.style.display = "block";
+      return;
+    }
 
-
-      if (!inputUsuario.value.trim()) {
-        inputUsuario.classList.add("error");
-        valido = false;
-      }
-
-      if (!inputSenha.value.trim()) {
-        inputSenha.classList.add("error");
-        valido = false;
-      }
-
-      if (!valido) {
-        msgErro.innerText = "Por favor, preencha todos os campos.";
-        msgErro.style.display = "block";
-        return;
-      }
-
-      fetch("/login", {
+    try {
+      const resposta = await fetch("/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           usuario: inputUsuario.value,
           senha: inputSenha.value
         })
-      })
-        .then(r => r.json())
-        .then(data => {
-          if (data.tipo === "triagem") location.href = "triagem.html";
-          if (data.tipo === "medico") location.href = "medico.html";
-          if (data.tipo === "atendimento") location.href = "atendimento.html";
+      });
 
+      const data = await resposta.json();
 
-          if (!data.tipo) {
-            msgErro.innerText = "Usuário ou senha incorretos.";
-            msgErro.style.display = "block";
-          }
-        })
-        .catch(() => {
-          msgErro.innerText = "Erro ao conectar com o servidor. Por favor confira os dados solicitados.";
+      if (resposta.ok && data.tipo) {
+        sessionStorage.setItem("usuario", JSON.stringify(data));
+
+        // Redirecionamento correto conforme o tipo cadastrado no db.json
+        if (data.tipo === "triagem") {
+          location.href = "triagem.html";
+        } else if (data.tipo === "medico") {
+          location.href = "medico.html";
+        } else if (data.tipo === "atendimento") {
+          location.href = "atendimento.html";
+        } else if (data.tipo === "medicacao") {
+          location.href = "medicacoes.html";
+        } else if (data.tipo === "alta") {
+          location.href = "alta.html";
+        } else {
+          msgErro.innerText = "Tipo de usuário não reconhecido.";
           msgErro.style.display = "block";
-        });
+        }
+      } else {
+        msgErro.innerText = data.erro || "Usuário ou senha incorretos.";
+        msgErro.style.display = "block";
+      }
+    } catch (error) {
+      msgErro.innerText = "Erro ao conectar com o servidor.";
+      msgErro.style.display = "block";
     }
-  </script>
-
+  }
+</script>
 </body>
 
 </html>
