@@ -1,623 +1,196 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atendimento Médico - Baymax</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        body { background-color: #f4f6f9; padding: 20px; }
+        .container { display: flex; gap: 20px; max-width: 1200px; margin: 0 auto; }
+        .panel { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .list-panel { flex: 1; }
+        .form-panel { flex: 1.5; }
+        h2 { margin-bottom: 15px; color: #333; }
+        ul { list-style: none; }
+        li { padding: 12px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Badges de Risco */
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #fff; text-transform: uppercase; }
+        .bg-verde { background-color: #2ecc71; }
+        .bg-amarelo { background-color: #f1c40f; color: #333; }
+        .bg-vermelho { background-color: #e74c3c; }
 
-  <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0">
-
-  <title>Painel Médico Baymax</title>
-
-  <link rel="stylesheet" href="css/style.css">
-
+        button { cursor: pointer; padding: 8px 12px; border: none; border-radius: 4px; font-weight: bold; }
+        .btn-call { background-color: #f39c12; color: #fff; margin-right: 5px; }
+        .btn-select { background-color: #3498db; color: #fff; }
+        .btn-submit { background-color: #2ecc71; color: #fff; width: 100%; padding: 12px; font-size: 16px; margin-top: 15px; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    </style>
 </head>
-
-
 <body>
 
-  <div class="container">
-
-    <img
-      src="css/Captura de tela 2026-08-06 114854.png"
-      width="54"
-      height="54"
-      alt="Baymax">
-
-
-    <h2>🩺 Painel Médico Baymax</h2>
-
-
-    <!-- =====================================================
-         CONFIGURAÇÃO DO GUICHÊ
-    ====================================================== -->
-
-    <h3>📺 Chamada na TV</h3>
-
-
-    <select id="localTipo">
-
-      <option value="GUICHÊ">
-        GUICHÊ
-      </option>
-
-      <option value="CONSULTÓRIO">
-        CONSULTÓRIO
-      </option>
-
-      <option value="SALA">
-        SALA
-      </option>
-
-    </select>
-
-
-    <input
-      id="localNumero"
-      type="number"
-      min="1"
-      placeholder="Número do guichê">
-
-
-    <hr>
-
-
-    <!-- =====================================================
-         TRIAGENS
-    ====================================================== -->
-
-    <h3>Pacientes aguardando atendimento</h3>
-
-
-    <div id="triagens"></div>
-
-
-    <hr>
-
-
-    <!-- =====================================================
-         CONSULTA
-    ====================================================== -->
-
-    <h3>Consulta</h3>
-
-
-    <input
-      id="paciente"
-      placeholder="Paciente"
-      readonly>
-
-
-    <input
-      id="diagnostico"
-      placeholder="Diagnóstico">
-
-
-    <select id="medicacao">
-
-      <option value="">
-        Selecione a medicação
-      </option>
-
-    </select>
-
-
-    <textarea
-      id="obs"
-      placeholder="Observações"></textarea>
-
-
-    <button
-      type="button"
-      onclick="salvar()">
-
-      Salvar
-
-    </button>
-
-
-  </div>
-
-
-  <script>
-
-    let triagensCarregadas = [];
-
-
-    // =====================================================
-    // CARREGAR TRIAGENS
-    // =====================================================
-
-    function carregar() {
-
-      fetch("/triagens")
-
-        .then(r => {
-
-          if (!r.ok) {
-
-            throw new Error(
-              "Erro ao carregar triagens"
-            );
-
-          }
-
-          return r.json();
-
-        })
-
-        .then(data => {
-
-          triagensCarregadas = data;
-
-
-          const div =
-            document.getElementById(
-              "triagens"
-            );
-
-
-          div.innerHTML = "";
-
-
-          if (!data.length) {
-
-            div.innerHTML = `
-              <p>
-                Nenhum paciente aguardando atendimento.
-              </p>
-            `;
-
-            return;
-          }
-
-
-          data.forEach((t, index) => {
-
-            div.innerHTML += `
-
-              <div class="card">
-
-                <h3>
-                  ${t.nome}
-                </h3>
-
-
-                <p>
-                  <b>Sintoma:</b>
-                  ${t.sintoma || "Não informado"}
-                </p>
-
-
-                <p>
-                  <b>Temperatura:</b>
-                  ${t.temperatura || "Não informada"}°C
-                </p>
-
-
-                <p>
-
-                  <span class="${t.risco}">
-                    ${t.risco}
-                  </span>
-
-                </p>
-
-
-                <p>
-                  <b>Alergia:</b>
-                  ${t.alergia || "Nenhuma"}
-                </p>
-
-
-                <p>
-                  <b>Observação:</b>
-                  ${t.observacao || "Nenhuma"}
-                </p>
-
-
-                <button
-                  type="button"
-                  onclick="selecionar(${index})">
-
-                  Atender
-
-                </button>
-
-              </div>
-
-            `;
-
-          });
-
-        })
-
-        .catch(err => {
-
-          console.error(
-            "Erro ao carregar triagens:",
-            err
-          );
-
+<div class="container">
+    <!-- FILA DE ESPERA MÉRICA -->
+    <div class="panel list-panel">
+        <h2>Aguardando Atendimento</h2>
+        <ul id="lista-pacientes">
+            <li>Carregando...</li>
+        </ul>
+    </div>
+
+    <!-- FORMULÁRIO DE CONSULTA -->
+    <div class="panel form-panel">
+        <h2>Consultório Médico</h2>
+        <form id="form-consulta">
+            <input type="hidden" id="pacienteId">
+            
+            <div class="form-group">
+                <label>Paciente:</label>
+                <input type="text" id="paciente" readonly placeholder="Selecione um paciente na fila">
+            </div>
+
+            <div class="form-group">
+                <label>Diagnóstico:</label>
+                <textarea id="diagnostico" rows="3" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Medicação Prescrita:</label>
+                <select id="medicacao">
+                    <option value="">Carregando medicações...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Observações / Recomendações:</label>
+                <textarea id="obs" rows="2"></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">Finalizar Consulta</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const API_URL = "http://localhost:3000";
+
+    // CARREGAR PACIENTES DA FILA DO MÉDICO
+    async function carregarFila() {
+        try {
+            const res = await fetch(`${API_URL}/pacientes/medico`);
+            const pacientes = await res.json();
+
+            const lista = document.getElementById("lista-pacientes");
+            lista.innerHTML = "";
+
+            if (pacientes.length === 0) {
+                lista.innerHTML = "<li>Nenhum paciente aguardando médico.</li>";
+                return;
+            }
+
+            pacientes.forEach(p => {
+                const li = document.createElement("li");
+                const corRisco = p.risco || "verde";
+
+                li.innerHTML = `
+                    <div>
+                        <strong>${p.nome}</strong><br>
+                        <span class="badge bg-${corRisco}">${corRisco}</span>
+                    </div>
+                    <div>
+                        <button class="btn-call" onclick="chamarTV('${p.nome}')">Chamar TV</button>
+                        <button class="btn-select" onclick="selecionarPaciente(${p.id}, '${p.nome}')">Atender</button>
+                    </div>
+                `;
+                lista.appendChild(li);
+            });
+        } catch (error) {
+            console.error("Erro ao carregar fila do médico:", error);
+        }
+    }
+
+    // CARREGAR LISTA DE MEDICAÇÕES PADRÃO
+    async function carregarMedicacoes() {
+        try {
+            const res = await fetch(`${API_URL}/lista-medicacoes`);
+            const medicacoes = await res.json();
+            const select = document.getElementById("medicacao");
+
+            select.innerHTML = '<option value="">Selecione uma medicação</option>';
+            medicacoes.forEach(med => {
+                const option = document.createElement("option");
+                option.value = med;
+                option.textContent = med;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Erro ao carregar medicações:", error);
+        }
+    }
+
+    // CHAMAR PACIENTE NA TV PARA O CONSULTÓRIO
+    async function chamarTV(nome) {
+        await fetch(`${API_URL}/tv/chamar`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                paciente: nome,
+                localTipo: "CONSULTÓRIO",
+                localNumero: "01"
+            })
         });
-
+        alert(`Paciente ${nome} chamado no Consultório 01!`);
     }
 
-
-    // =====================================================
-    // SELECIONAR PACIENTE
-    // =====================================================
-
-    function selecionar(index) {
-
-      const t =
-        triagensCarregadas[index];
-
-
-      if (!t) {
-
-        alert(
-          "Paciente não encontrado."
-        );
-
-        return;
-      }
-
-
-      document.getElementById(
-        "paciente"
-      ).value = t.nome;
-
-
-      document.getElementById(
-        "obs"
-      ).value =
-        t.observacao || "";
-
-
-      if (
-        t.alergia &&
-        t.alergia !== "Nenhuma"
-      ) {
-
-        alert(
-          "⚠️ Paciente possui alergia: " +
-          t.alergia
-        );
-
-      }
-
-
-      // =================================================
-      // CHAMAR PACIENTE NA TV
-      // =================================================
-
-      chamarNaTV(t);
-
+    // SELECIONAR PACIENTE PARA A CONSULTA
+    function selecionarPaciente(id, nome) {
+        document.getElementById("pacienteId").value = id;
+        document.getElementById("paciente").value = nome;
     }
 
-
-    // =====================================================
-    // CHAMAR PACIENTE NA TV
-    // =====================================================
-
-    function chamarNaTV(t) {
-
-      const localTipo =
-        document.getElementById(
-          "localTipo"
-        ).value;
-
-
-      const localNumero =
-        document.getElementById(
-          "localNumero"
-        ).value;
-
-
-      if (!localNumero) {
-
-        alert(
-          "Informe o número do guichê antes de chamar o paciente."
-        );
-
-        return;
-      }
-
-
-      fetch("/tv/chamar", {
-
-        method: "POST",
-
-        headers: {
-
-          "Content-Type":
-            "application/json"
-
-        },
-
-        body: JSON.stringify({
-
-          paciente: t.nome,
-
-          localTipo:
-
-            localTipo,
-
-          localNumero:
-
-            localNumero
-
-        })
-
-      })
-
-
-        .then(r => {
-
-          if (!r.ok) {
-
-            throw new Error(
-              "Erro ao chamar paciente"
-            );
-
-          }
-
-          return r.json();
-
-        })
-
-
-        .then(data => {
-
-          if (data.sucesso) {
-
-            alert(
-              "📺 Paciente chamado na TV!"
-            );
-
-          }
-
-        })
-
-
-        .catch(err => {
-
-          console.error(
-            "Erro ao chamar na TV:",
-            err
-          );
-
-
-          alert(
-            "Não foi possível chamar o paciente na TV."
-          );
-
-        });
-
-    }
-
-
-    // =====================================================
-    // CARREGAR MEDICAÇÕES
-    // =====================================================
-
-    function carregarMedicacoes() {
-
-      fetch("/lista-medicacoes")
-
-        .then(r => {
-
-          if (!r.ok) {
-
-            throw new Error(
-              "Erro ao carregar medicações"
-            );
-
-          }
-
-          return r.json();
-
-        })
-
-        .then(data => {
-
-          const select =
-            document.getElementById(
-              "medicacao"
-            );
-
-
-          select.innerHTML = `
-
-            <option value="">
-              Selecione a medicação
-            </option>
-
-          `;
-
-
-          data.forEach(med => {
-
-            const option =
-              document.createElement(
-                "option"
-              );
-
-
-            option.value = med;
-
-            option.textContent = med;
-
-
-            select.appendChild(
-              option
-            );
-
-          });
-
-        })
-
-        .catch(err => {
-
-          console.error(
-            "Erro ao carregar medicações:",
-            err
-          );
-
-        });
-
-    }
-
-
-    // =====================================================
     // SALVAR CONSULTA
-    // =====================================================
+    document.getElementById("form-consulta").addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-    function salvar() {
+        const pacienteId = document.getElementById("pacienteId").value;
+        if (!pacienteId) {
+            alert("Selecione um paciente na lista primeiro!");
+            return;
+        }
 
-      const paciente =
-        document.getElementById(
-          "paciente"
-        ).value;
+        const dados = {
+            pacienteId: Number(pacienteId),
+            paciente: document.getElementById("paciente").value,
+            diagnostico: document.getElementById("diagnostico").value,
+            medicacao: document.getElementById("medicacao").value,
+            obs: document.getElementById("obs").value
+        };
 
+        try {
+            const res = await fetch(`${API_URL}/consulta`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dados)
+            });
 
-      const diagnostico =
-        document.getElementById(
-          "diagnostico"
-        ).value;
+            if (res.ok) {
+                alert("Consulta finalizada com sucesso!");
+                document.getElementById("form-consulta").reset();
+                carregarFila();
+            }
+        } catch (error) {
+            console.error("Erro ao salvar consulta:", error);
+        }
+    });
 
-
-      const medicacao =
-        document.getElementById(
-          "medicacao"
-        ).value;
-
-
-      const obs =
-        document.getElementById(
-          "obs"
-        ).value;
-
-
-      if (!paciente) {
-
-        alert(
-          "Selecione um paciente clicando em Atender."
-        );
-
-        return;
-      }
-
-
-      if (!medicacao) {
-
-        alert(
-          "Selecione uma medicação."
-        );
-
-        return;
-      }
-
-
-      fetch("/consulta", {
-
-        method: "POST",
-
-        headers: {
-
-          "Content-Type":
-            "application/json"
-
-        },
-
-        body: JSON.stringify({
-
-          paciente,
-
-          diagnostico,
-
-          medicacao,
-
-          obs
-
-        })
-
-      })
-
-
-        .then(r => {
-
-          if (!r.ok) {
-
-            throw new Error(
-              "Erro ao salvar consulta"
-            );
-
-          }
-
-          return r.json();
-
-        })
-
-
-        .then(() => {
-
-          alert(
-            "Consulta salva"
-          );
-
-
-          document.getElementById(
-            "diagnostico"
-          ).value = "";
-
-
-          document.getElementById(
-            "medicacao"
-          ).value = "";
-
-
-          document.getElementById(
-            "obs"
-          ).value = "";
-
-
-          // Atualiza a lista
-          carregar();
-
-        })
-
-
-        .catch(err => {
-
-          console.error(
-            "Erro ao salvar consulta:",
-            err
-          );
-
-
-          alert(
-            "Não foi possível salvar a consulta."
-          );
-
-        });
-
-    }
-
-
-    // =====================================================
-    // INICIALIZAÇÃO
-    // =====================================================
-
-    carregar();
-
+    // Inicialização
+    carregarFila();
     carregarMedicacoes();
-
-  </script>
+    setInterval(carregarFila, 5000);
+</script>
 
 </body>
-
 </html>
