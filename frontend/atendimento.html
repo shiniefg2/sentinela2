@@ -11,63 +11,149 @@
     <div class="container">
         <h2>Atendimento Baymax</h2>
 
-        <input id="nome" placeholder="Nome">
+    <input id="nome" placeholder="Nome">
 
-        <input id="cpf" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)">
+<input id="cpf" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)">
 
-        <select id="tipo">
-            <option>Convenio</option>
-            <option>Particular</option>
-        </select>
+<input id="nome_mae" placeholder="Nome da mãe">
 
-        <input type="file" id="foto">
+<input id="endereco" placeholder="Endereço">
 
-        <button onclick="cadastrar()">Cadastrar</button>
+<input id="telefone" placeholder="Telefone" maxlength="15" oninput="mascaraTelefone(this)">
+
+<input id="email" placeholder="Email">
+
+<input id="contato_emergencia" placeholder="Contato de emergência">
+
+Estado civil:
+<select id="estado_civil">
+    <option>Casado(a)</option>
+    <option>Separado(a)</option>
+    <option>Solteiro(a)</option>
+</select>
+
+Sexo:
+<select id="sexo">
+    <option>Masculino</option>
+    <option>Feminino</option>
+</select>
+
+Plano de saúde:
+<select id="tipo">
+    <option>Convenio</option>
+    <option>Particular</option>
+</select>
+
+<input type="file" id="foto">
+
+<button onclick="cadastrar()">Cadastrar</button>
+
     </div>
 
     <script>
         function mascaraCPF(campo) {
-            let valor = campo.value.replace(/\D/g, "");
+    let valor = campo.value.replace(/\D/g, "");
 
-            if (valor.length > 11) {
-                valor = valor.substring(0, 11);
-            }
+    if (valor.length > 11) {
+        valor = valor.substring(0, 11);
+    }
 
-            valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
-            valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
-            valor = valor.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
+    valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
+    valor = valor.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 
-            campo.value = valor;
+    campo.value = valor;
+}
+
+function mascaraTelefone(campo) {
+    let valor = campo.value.replace(/\D/g, "");
+
+    if (valor.length > 11) {
+        valor = valor.substring(0, 11);
+    }
+
+    if (valor.length <= 10) {
+        valor = valor.replace(/(\d{2})(\d)/, "($1) $2");
+        valor = valor.replace(/(\d{4})(\d)/, "$1-$2");
+    } else {
+        valor = valor.replace(/(\d{2})(\d)/, "($1) $2");
+        valor = valor.replace(/(\d{5})(\d)/, "$1-$2");
+    }
+
+    campo.value = valor;
+}
+
+async function cadastrar() {
+
+    const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+
+    if (nome.value.trim() === "") {
+        alert("Digite o nome.");
+        return;
+    }
+
+    if (!cpfRegex.test(cpf.value)) {
+        alert("Digite o CPF no formato 000.000.000-00");
+        return;
+    }
+
+    if (nome_mae.value.trim() === "") {
+        alert("Digite o nome da mãe.");
+        return;
+    }
+
+    if (endereco.value.trim() === "") {
+        alert("Digite o endereço.");
+        return;
+    }
+
+    if (telefone.value.trim() === "") {
+        alert("Digite o telefone.");
+        return;
+    }
+
+    if (email.value.trim() === "") {
+        alert("Digite o email.");
+        return;
+    }
+
+    if (contato_emergencia.value.trim() === "") {
+        alert("Digite o contato de emergência.");
+        return;
+    }
+
+    try {
+        const resposta = await fetch("http://localhost:3000/atendimento", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                nome: nome.value,
+                cpf: cpf.value,
+                nome_mae: nome_mae.value,
+                estado_civil: estado_civil.value,
+                sexo: sexo.value,
+                tipo: tipo.value,
+                endereco: endereco.value,
+                telefone: telefone.value,
+                email: email.value,
+                contato_emergencia: contato_emergencia.value
+            })
+        });
+
+        if (!resposta.ok) {
+            throw new Error("Erro ao enviar paciente");
         }
 
-        function cadastrar() {
+        alert("Paciente enviado para triagem!");
 
-            const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+    } catch (erro) {
+        console.error(erro);
+        alert("Erro ao enviar o paciente para o servidor.");
+    }
+}
 
-            if (nome.value.trim() === "") {
-                alert("Digite o nome.");
-                return;
-            }
-
-            if (!cpfRegex.test(cpf.value)) {
-                alert("Digite o CPF no formato 000.000.000-00");
-                return;
-            }
-
-            fetch("http://localhost:3000/atendimento", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    nome: nome.value,
-                    cpf: cpf.value,
-                    tipo: tipo.value
-                })
-            });
-
-            alert("Paciente enviado para triagem");
-        }
     </script>
 
 </body>
